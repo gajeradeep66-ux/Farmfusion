@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import api from '../api';
+import api, { resolveImageUrl } from '../api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { usePreferences } from '../context/PreferencesContext';
@@ -75,7 +75,7 @@ export default function ProductDetailsPage() {
       <div className="pdp-grid">
         <div>
           <div className="pdp-image-frame">
-            <img src={product.image} alt={productName} className="pdp-image" />
+            <img src={resolveImageUrl(product.image)} alt={productName} className="pdp-image" />
             <button
               type="button"
               className={`pdp-wishlist-btn${wished ? ' wished' : ''}`}

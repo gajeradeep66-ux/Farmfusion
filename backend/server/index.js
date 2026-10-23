@@ -21,8 +21,15 @@ const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT || 7854);
 const uploadsPath = path.resolve(__dirname, '../uploads');
 
+const configuredFrontendOrigin = process.env.FRONTEND_URL
+  ? new URL(
+    process.env.FRONTEND_URL.startsWith('http')
+      ? process.env.FRONTEND_URL
+      : `https://${process.env.FRONTEND_URL}`
+  ).origin
+  : undefined;
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
+  configuredFrontendOrigin,
   'http://localhost:5173',
   'http://localhost:5174',
   'http://127.0.0.1:5173',
@@ -99,20 +106,6 @@ const ensureDefaultData = async () => {
   }
 };
 
-const serveFrontend = () => {
-  const distPath = path.resolve(__dirname, '../dist');
-  const indexPath = path.join(distPath, 'index.html');
-
-  console.log('Serving the built frontend');
-  app.use(express.static(distPath));
-  app.get('/{*splat}', (req, res) => {
-    if (req.path.startsWith('/api')) {
-      return res.status(404).json({ message: 'API route not found' });
-    }
-    res.sendFile(indexPath);
-  });
-};
-
 const startServer = async () => {
   if (!process.env.JWT_SECRET) {
     console.error('JWT_SECRET must be set in the environment before starting FarmFusion.');
@@ -125,9 +118,6 @@ const startServer = async () => {
 
     const productionMode = process.env.NODE_ENV === 'production';
     console.log(`FarmFusion mode: ${productionMode ? 'production' : 'development'}`);
-    if (productionMode) {
-      serveFrontend();
-    }
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`FarmFusion server running on http://localhost:${PORT}`);

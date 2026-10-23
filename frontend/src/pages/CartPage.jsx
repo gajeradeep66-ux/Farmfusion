@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../api';
+import api, { resolveImageUrl } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { usePreferences } from '../context/PreferencesContext';
@@ -303,7 +303,7 @@ export default function CartPage() {
           {items.map((item, index) => (
             <article key={item.productId} className="cart-item">
               <Link to={`/product/${item.productId}`} className="cart-item-image">
-                <img src={item.image} alt={tProductName(item.name)} />
+                <img src={resolveImageUrl(item.image)} alt={tProductName(item.name)} />
                 <span className="cart-item-index">{String(index + 1).padStart(2, '0')}</span>
               </Link>
               <div className="cart-item-details">

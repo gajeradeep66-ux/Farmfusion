@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { usePreferences } from '../context/PreferencesContext';
 import { toast } from './Toast';
+import { resolveImageUrl } from '../api';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
@@ -31,7 +32,7 @@ export default function ProductCard({ product }) {
     <article className="product-tile">
       <Link to={`/product/${product._id}`} className="product-image-link" aria-label={`View ${productName}`}>
         <div className="product-image-wrap">
-          <img src={product.image} alt={productName} className="product-image" loading="lazy" />
+          <img src={resolveImageUrl(product.image)} alt={productName} className="product-image" loading="lazy" />
           <span className="product-category">{t(product.category)}</span>
           <button
             type="button"

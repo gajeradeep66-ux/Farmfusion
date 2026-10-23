@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import api from '../api';
+import api, { resolveImageUrl } from '../api';
 import './OrdersPage.css';
 
 const formatAddress = (address) =>
@@ -79,7 +79,7 @@ export default function OrdersPage() {
               <div className="customer-order-items">
                 {order.items?.map((item, index) => (
                   <div className="customer-order-item" key={`${order._id}-${item.product || index}`}>
-                    {item.image && <img src={item.image} alt="" />}
+                    {item.image && <img src={resolveImageUrl(item.image)} alt="" />}
                     <div className="customer-order-item-name">
                       <strong>{item.name}</strong>
                       <span>Qty: {item.quantity}</span>

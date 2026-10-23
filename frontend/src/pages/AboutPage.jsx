@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../api';
+import api, { resolveImageUrl } from '../api';
 
 export default function AboutPage() {
   const [content, setContent] = useState(null);
@@ -22,7 +22,7 @@ export default function AboutPage() {
         <Link className="button-primary" to="/shop">Explore farm essentials <span aria-hidden="true">→</span></Link>
       </div>
       <div className="about-image-wrap">
-        <img src={content?.image && !content.image.startsWith('/images/about-farm.svg') ? content.image : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1800&q=90'} alt="Sunlit green fields stretching across a farm landscape" />
+        <img src={resolveImageUrl(content?.image && !content.image.startsWith('/images/about-farm.svg') ? content.image : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1800&q=90')} alt="Sunlit green fields stretching across a farm landscape" />
         <span>GROW GOOD THINGS</span>
       </div>
     </section>

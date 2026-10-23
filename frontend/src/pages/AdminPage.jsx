@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import api from '../api';
+import api, { resolveImageUrl } from '../api';
 import './AdminPage.css';
 
 const categories = ['Seeds', 'Farming Tools', 'Soil & Nutrition', 'Plant Protection', 'Growing Essentials', 'Smart Farming'];
@@ -32,7 +32,7 @@ function ImagePicker({ label, image, file, source, onSourceChange, onImageChange
       ) : (
         <input ref={inputRef} type="file" accept={imageTypes} onChange={onChange} className="admin-field mt-2" />
       )}
-      {preview && <img src={preview} alt={`${label} preview`} className="mt-3 h-36 w-full rounded-xl bg-stone-100 object-cover" />}
+      {preview && <img src={resolveImageUrl(preview)} alt={`${label} preview`} className="mt-3 h-36 w-full rounded-xl bg-stone-100 object-cover" />}
       <span className="mt-1 block text-xs font-normal text-slate-500">{source === 'url' ? 'Paste a direct image URL (HTTPS recommended).' : 'JPG, PNG, WebP or AVIF · max 5 MB'}</span>
     </div>
   );
@@ -343,7 +343,7 @@ export default function AdminPage() {
                 <div className="admin-product-list">
                   {filteredProducts.map((item) => (
                     <article key={item._id} className={`admin-product-row ${editingId === item._id ? 'is-editing' : ''}`}>
-                      <img src={item.image} alt={item.name} />
+                      <img src={resolveImageUrl(item.image)} alt={item.name} />
                       <div className="admin-product-details">
                         <h3>{item.name}</h3>
                         <p>{item.category}</p>
