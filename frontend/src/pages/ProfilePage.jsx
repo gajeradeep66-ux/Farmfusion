@@ -521,6 +521,11 @@ export default function ProfilePage() {
                   <div key={c._id} className="profile-coupon-card">
                     <div className="profile-coupon-top">
                       <span className="profile-coupon-badge">{c.discountPercent}% OFF</span>
+                      {c.targetType === 'selected' ? (
+                        <span className="profile-coupon-exclusive-tag">⭐ Exclusive For You</span>
+                      ) : (
+                        <span className="profile-coupon-all-tag">🌐 All Growers Offer</span>
+                      )}
                       <span className="profile-coupon-exp">Valid till {expDate}</span>
                     </div>
 

@@ -38,6 +38,13 @@ const couponSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
+    allowedEmails: [
+      {
+        type: String,
+        trim: true,
+        lowercase: true,
+      },
+    ],
     targetType: {
       type: String,
       enum: ['all', 'selected'],

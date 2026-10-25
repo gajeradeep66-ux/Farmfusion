@@ -62,6 +62,14 @@ export default function AdminPage() {
   const [coupons, setCoupons] = useState([]);
   const [couponForm, setCouponForm] = useState({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '', targetType: 'all', allowedEmail: '', assignedUserName: '' });
   const [busyCoupon, setBusyCoupon] = useState('');
+  const [dispatchForm, setDispatchForm] = useState({
+    couponTarget: 'all',
+    selectedCouponId: '',
+    userTarget: 'all',
+    allowedEmail: '',
+    assignedUserName: '',
+  });
+  const [dispatching, setDispatching] = useState(false);
   const productFileRef = useRef(null);
   const aboutFileRef = useRef(null);
 
@@ -288,6 +296,60 @@ export default function AdminPage() {
     } finally {
       setBusyCoupon('');
     }
+  };
+
+  const handleDispatchCoupons = async (event) => {
+    if (event) event.preventDefault();
+    setDispatching(true);
+    setMessage('');
+    setError('');
+    try {
+      const isCouponAll = dispatchForm.couponTarget === 'all';
+      const selectedId = dispatchForm.selectedCouponId;
+
+      if (!isCouponAll && !selectedId) {
+        setError('Please select a coupon to send.');
+        setDispatching(false);
+        return;
+      }
+
+      const isUserAll = dispatchForm.userTarget === 'all';
+      if (!isUserAll && !dispatchForm.allowedEmail?.trim()) {
+        setError('Please choose or enter a customer email address.');
+        setDispatching(false);
+        return;
+      }
+
+      const { data } = await api.post('/admin/coupons/dispatch', {
+        couponTarget: dispatchForm.couponTarget,
+        selectedCouponIds: isCouponAll ? [] : [selectedId],
+        userTarget: dispatchForm.userTarget,
+        allowedEmail: dispatchForm.allowedEmail?.trim(),
+        assignedUserName: dispatchForm.assignedUserName?.trim(),
+      });
+
+      setCoupons(data.coupons || []);
+      setMessage(data.message || '✓ Coupons dispatched successfully!');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not dispatch coupons.');
+    } finally {
+      setDispatching(false);
+    }
+  };
+
+  const handleSelectCouponForDispatch = (c) => {
+    setDispatchForm((prev) => ({
+      ...prev,
+      couponTarget: 'selected',
+      selectedCouponId: c._id,
+    }));
+    const el = document.getElementById('admin-coupon-dispatcher');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('admin-panel-highlight');
+      setTimeout(() => el.classList.remove('admin-panel-highlight'), 1800);
+    }
+    setMessage(`Selected coupon ${c.code} (${c.discountPercent}% OFF) for dispatch. Choose target audience below.`);
   };
 
   const handleAutoCreateCoupon = async () => {
@@ -575,189 +637,365 @@ export default function AdminPage() {
 
           {tab === 'coupons' && (
             <div id="admin-panel-coupons" role="tabpanel" aria-labelledby="admin-tab-coupons" className="admin-products-layout">
-              {/* Form to create coupon */}
-              <form onSubmit={handleCreateCoupon} className="admin-panel admin-product-form">
-                <div className="admin-panel-heading">
-                  <div>
-                    <p className="admin-section-label">CREATE PROMO</p>
-                    <h2>New Discount Coupon</h2>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      onClick={handleSeedCoupons}
-                      disabled={saving}
-                      style={{
-                        background: 'var(--c-surface2)',
-                        color: 'var(--c-green2)',
-                        border: '1.5px solid var(--c-border)',
-                        padding: '7px 12px',
-                        borderRadius: '8px',
-                        fontSize: '11px',
-                        fontWeight: '750',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      ⚡ Seed 16 Standard Coupons
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAutoCreateCoupon}
-                      disabled={saving}
-                      style={{
-                        background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                        color: '#fff',
-                        border: 0,
-                        padding: '7px 12px',
-                        borderRadius: '8px',
-                        fontSize: '11px',
-                        fontWeight: '800',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      + Quick Auto-Coupon
-                    </button>
-                  </div>
-                </div>
-
-                {/* Target Audience: All vs Selected */}
-                <div style={{ marginBottom: '14px', background: 'var(--c-surface2)', padding: '12px 14px', borderRadius: '12px', border: '1px solid var(--c-border)' }}>
-                  <span className="admin-label" style={{ marginBottom: '8px', display: 'block' }}>Target Audience (કોને કૂપન મોકલવું):</span>
-                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: couponForm.targetType === 'all' ? '800' : '500', color: couponForm.targetType === 'all' ? 'var(--c-green)' : 'var(--c-text2)' }}>
-                      <input
-                        type="radio"
-                        name="targetType"
-                        value="all"
-                        checked={couponForm.targetType === 'all'}
-                        onChange={() => setCouponForm({ ...couponForm, targetType: 'all', allowedEmail: '', assignedUserName: '' })}
-                      />
-                      🌐 All Users (બધા ગ્રાહકો માટે)
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: couponForm.targetType === 'selected' ? '800' : '500', color: couponForm.targetType === 'selected' ? 'var(--c-green)' : 'var(--c-text2)' }}>
-                      <input
-                        type="radio"
-                        name="targetType"
-                        value="selected"
-                        checked={couponForm.targetType === 'selected'}
-                        onChange={() => setCouponForm({ ...couponForm, targetType: 'selected' })}
-                      />
-                      👤 Selected User Only (પસંદગીના યૂઝર માટે)
-                    </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                {/* ── CARD 1: Coupon Dispatcher (Select Coupon -> Select User) ── */}
+                <form onSubmit={handleDispatchCoupons} id="admin-coupon-dispatcher" className="admin-panel admin-dispatch-card">
+                  <div className="admin-panel-heading">
+                    <div>
+                      <p className="admin-section-label">COUPON DISPATCHER & DISTRIBUTION</p>
+                      <h2>🎁 Send Coupons to Customers</h2>
+                    </div>
+                    <span className="admin-result-count">Distribution Tool</span>
                   </div>
 
-                  {couponForm.targetType === 'selected' && (
-                    <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed var(--c-border)' }}>
-                      <label className="admin-label">
-                        Select Registered Customer:
-                        <select
-                          className="admin-field mt-1"
-                          value={couponForm.allowedEmail}
-                          onChange={(e) => {
-                            const found = users.find((u) => u.email === e.target.value);
-                            setCouponForm({
-                              ...couponForm,
-                              allowedEmail: e.target.value,
-                              assignedUserName: found ? found.name : '',
+                  <p style={{ fontSize: '12px', color: 'var(--c-text2)', margin: '4px 0 12px' }}>
+                    Select which coupon(s) to grant and choose whether to send to <strong>All Users (બધા)</strong> or a <strong>Specific Customer (પસંદગીનો યૂઝર)</strong>.
+                  </p>
+
+                  {/* Step 1: Select Coupon(s) */}
+                  <div className="admin-dispatch-step">
+                    <div className="admin-dispatch-step-title">
+                      <span>1️⃣</span> <span>Select Coupon(s) / કૂપન પસંદ કરો:</span>
+                    </div>
+                    <div className="admin-dispatch-options">
+                      <label className={`admin-dispatch-option${dispatchForm.couponTarget === 'all' ? ' active' : ''}`}>
+                        <input
+                          type="radio"
+                          name="couponTarget"
+                          value="all"
+                          checked={dispatchForm.couponTarget === 'all'}
+                          onChange={() => setDispatchForm({ ...dispatchForm, couponTarget: 'all' })}
+                        />
+                        <span>🌟 All Coupons (બધા {coupons.length} કૂપન્સ)</span>
+                      </label>
+                      <label className={`admin-dispatch-option${dispatchForm.couponTarget === 'selected' ? ' active' : ''}`}>
+                        <input
+                          type="radio"
+                          name="couponTarget"
+                          value="selected"
+                          checked={dispatchForm.couponTarget === 'selected'}
+                          onChange={() => {
+                            const firstCouponId = coupons[0]?._id || '';
+                            setDispatchForm({
+                              ...dispatchForm,
+                              couponTarget: 'selected',
+                              selectedCouponId: dispatchForm.selectedCouponId || firstCouponId,
                             });
                           }}
+                        />
+                        <span>🎯 Specific Coupon (પસંદગીનું કૂપન)</span>
+                      </label>
+                    </div>
+
+                    {dispatchForm.couponTarget === 'selected' && (
+                      <div style={{ marginTop: '10px' }}>
+                        <select
+                          className="admin-field mt-1"
+                          value={dispatchForm.selectedCouponId}
+                          onChange={(e) => setDispatchForm({ ...dispatchForm, selectedCouponId: e.target.value })}
                         >
-                          <option value="">-- Choose customer or type email below --</option>
-                          {users.map((u) => (
-                            <option key={u._id} value={u.email}>
-                              {u.name} ({u.email})
+                          <option value="">-- Choose a Coupon ({coupons.length} available) --</option>
+                          {coupons.map((c) => (
+                            <option key={c._id} value={c._id}>
+                              {c.code} — {c.discountPercent}% OFF {c.minCartAmount ? `(Min ₹${c.minCartAmount})` : ''} ({c.description || 'Special Promo'})
                             </option>
                           ))}
                         </select>
-                      </label>
-                      <label className="admin-label mt-2">
-                        Or Customer Email Address:
-                        <input
-                          type="email"
-                          placeholder="e.g. grower@example.com"
-                          value={couponForm.allowedEmail || ''}
-                          onChange={(e) => setCouponForm({ ...couponForm, allowedEmail: e.target.value })}
-                          className="admin-field mt-1"
-                        />
-                      </label>
-                      <small style={{ fontSize: '11px', color: 'var(--c-green2)', marginTop: '4px', display: 'block' }}>
-                        🔒 This coupon will appear exclusively in this customer's Profile!
-                      </small>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Step 2: Select User(s) */}
+                  <div className="admin-dispatch-step">
+                    <div className="admin-dispatch-step-title">
+                      <span>2️⃣</span> <span>Select Recipient / કોને મોકલવું:</span>
                     </div>
-                  )}
-                </div>
+                    <div className="admin-dispatch-options">
+                      <label className={`admin-dispatch-option${dispatchForm.userTarget === 'all' ? ' active' : ''}`}>
+                        <input
+                          type="radio"
+                          name="userTarget"
+                          value="all"
+                          checked={dispatchForm.userTarget === 'all'}
+                          onChange={() => setDispatchForm({ ...dispatchForm, userTarget: 'all', allowedEmail: '', assignedUserName: '' })}
+                        />
+                        <span>🌐 All Customers (બધા ગ્રાહકો - Public)</span>
+                      </label>
+                      <label className={`admin-dispatch-option${dispatchForm.userTarget === 'selected' ? ' active' : ''}`}>
+                        <input
+                          type="radio"
+                          name="userTarget"
+                          value="selected"
+                          checked={dispatchForm.userTarget === 'selected'}
+                          onChange={() => setDispatchForm({ ...dispatchForm, userTarget: 'selected' })}
+                        />
+                        <span>👤 Selected Customer Only (પસંદગીના યૂઝર માટે)</span>
+                      </label>
+                    </div>
 
-                <label className="admin-label">
-                  Coupon Code
-                  <input
-                    required
-                    maxLength="25"
-                    placeholder="e.g. KISAN25 or HARVEST"
-                    value={couponForm.code}
-                    onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
-                    className="admin-field mt-1"
-                    style={{ textTransform: 'uppercase', fontWeight: '750' }}
-                  />
-                </label>
+                    {dispatchForm.userTarget === 'selected' && (
+                      <div style={{ marginTop: '10px' }}>
+                        <label className="admin-label">
+                          Choose Registered Customer:
+                          <select
+                            className="admin-field mt-1"
+                            value={dispatchForm.allowedEmail}
+                            onChange={(e) => {
+                              const found = users.find((u) => u.email === e.target.value);
+                              setDispatchForm({
+                                ...dispatchForm,
+                                allowedEmail: e.target.value,
+                                assignedUserName: found ? found.name : '',
+                              });
+                            }}
+                          >
+                            <option value="">-- Select customer ({users.length} registered) --</option>
+                            {users.map((u) => (
+                              <option key={u._id} value={u.email}>
+                                {u.name} ({u.email})
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="admin-label mt-2">
+                          Or Enter Customer Email Directly:
+                          <input
+                            type="email"
+                            placeholder="e.g. kisan@example.com"
+                            value={dispatchForm.allowedEmail}
+                            onChange={(e) => setDispatchForm({ ...dispatchForm, allowedEmail: e.target.value })}
+                            className="admin-field mt-1"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="admin-field-grid">
+                  {/* Live Action Preview */}
+                  <div className="admin-dispatch-preview">
+                    <div>
+                      <span>🚀 <strong>Action Summary:</strong> </span>
+                      <span>
+                        {dispatchForm.couponTarget === 'all' ? (
+                          <strong>All {coupons.length} Available Coupons</strong>
+                        ) : (
+                          <strong>Coupon {coupons.find((c) => c._id === dispatchForm.selectedCouponId)?.code || 'Selected Promo'}</strong>
+                        )}
+                      </span>
+                      <span> will be assigned to </span>
+                      <span>
+                        {dispatchForm.userTarget === 'all' ? (
+                          <strong>All Registered Users (બધા યૂઝર્સ)</strong>
+                        ) : (
+                          <strong>
+                            {dispatchForm.assignedUserName
+                              ? `${dispatchForm.assignedUserName} (${dispatchForm.allowedEmail || 'No email specified'})`
+                              : dispatchForm.allowedEmail || 'Selected Customer'}
+                          </strong>
+                        )}
+                      </span>
+                      .
+                    </div>
+                    <span className="admin-dispatch-note">
+                      {dispatchForm.userTarget === 'all'
+                        ? '✓ Every logged-in user will see this under "Profile > Admin Coupons" and can apply it in Cart.'
+                        : '🔒 Only this customer will see and be permitted to apply this coupon.'}
+                    </span>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="admin-form-actions" style={{ marginTop: '14px' }}>
+                    <button
+                      disabled={dispatching || (dispatchForm.couponTarget === 'selected' && !dispatchForm.selectedCouponId)}
+                      type="submit"
+                      className="admin-primary-button"
+                    >
+                      {dispatching ? 'Sending Coupons…' : '🚀 Send / Assign Coupon(s) (કૂપન મોકલો)'}
+                    </button>
+                  </div>
+                </form>
+
+                {/* ── CARD 2: Create Custom Promo Code ── */}
+                <form onSubmit={handleCreateCoupon} className="admin-panel admin-product-form">
+                  <div className="admin-panel-heading">
+                    <div>
+                      <p className="admin-section-label">CREATE PROMO</p>
+                      <h2>New Custom Coupon</h2>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={handleSeedCoupons}
+                        disabled={saving}
+                        style={{
+                          background: 'var(--c-surface2)',
+                          color: 'var(--c-green2)',
+                          border: '1.5px solid var(--c-border)',
+                          padding: '7px 12px',
+                          borderRadius: '8px',
+                          fontSize: '11px',
+                          fontWeight: '750',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ⚡ Seed 16 Standard Coupons
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAutoCreateCoupon}
+                        disabled={saving}
+                        style={{
+                          background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                          color: '#fff',
+                          border: 0,
+                          padding: '7px 12px',
+                          borderRadius: '8px',
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        + Quick Auto-Coupon
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Target Audience: All vs Selected */}
+                  <div style={{ marginBottom: '14px', background: 'var(--c-surface2)', padding: '12px 14px', borderRadius: '12px', border: '1px solid var(--c-border)' }}>
+                    <span className="admin-label" style={{ marginBottom: '8px', display: 'block' }}>Initial Target Audience:</span>
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: couponForm.targetType === 'all' ? '800' : '500', color: couponForm.targetType === 'all' ? 'var(--c-green)' : 'var(--c-text2)' }}>
+                        <input
+                          type="radio"
+                          name="targetType"
+                          value="all"
+                          checked={couponForm.targetType === 'all'}
+                          onChange={() => setCouponForm({ ...couponForm, targetType: 'all', allowedEmail: '', assignedUserName: '' })}
+                        />
+                        🌐 All Users (બધા ગ્રાહકો માટે)
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: couponForm.targetType === 'selected' ? '800' : '500', color: couponForm.targetType === 'selected' ? 'var(--c-green)' : 'var(--c-text2)' }}>
+                        <input
+                          type="radio"
+                          name="targetType"
+                          value="selected"
+                          checked={couponForm.targetType === 'selected'}
+                          onChange={() => setCouponForm({ ...couponForm, targetType: 'selected' })}
+                        />
+                        👤 Selected User Only (પસંદગીના યૂઝર માટે)
+                      </label>
+                    </div>
+
+                    {couponForm.targetType === 'selected' && (
+                      <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed var(--c-border)' }}>
+                        <label className="admin-label">
+                          Select Registered Customer:
+                          <select
+                            className="admin-field mt-1"
+                            value={couponForm.allowedEmail}
+                            onChange={(e) => {
+                              const found = users.find((u) => u.email === e.target.value);
+                              setCouponForm({
+                                ...couponForm,
+                                allowedEmail: e.target.value,
+                                assignedUserName: found ? found.name : '',
+                              });
+                            }}
+                          >
+                            <option value="">-- Choose customer or type email below --</option>
+                            {users.map((u) => (
+                              <option key={u._id} value={u.email}>
+                                {u.name} ({u.email})
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="admin-label mt-2">
+                          Or Customer Email Address:
+                          <input
+                            type="email"
+                            placeholder="e.g. grower@example.com"
+                            value={couponForm.allowedEmail || ''}
+                            onChange={(e) => setCouponForm({ ...couponForm, allowedEmail: e.target.value })}
+                            className="admin-field mt-1"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
                   <label className="admin-label">
-                    Discount (%)
+                    Coupon Code
                     <input
                       required
-                      type="number"
-                      min="1"
-                      max="90"
-                      value={couponForm.discountPercent}
-                      onChange={(e) => setCouponForm({ ...couponForm, discountPercent: e.target.value })}
+                      maxLength="25"
+                      placeholder="e.g. KISAN25 or HARVEST"
+                      value={couponForm.code}
+                      onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
                       className="admin-field mt-1"
+                      style={{ textTransform: 'uppercase', fontWeight: '750' }}
                     />
                   </label>
+
+                  <div className="admin-field-grid">
+                    <label className="admin-label">
+                      Discount (%)
+                      <input
+                        required
+                        type="number"
+                        min="1"
+                        max="90"
+                        value={couponForm.discountPercent}
+                        onChange={(e) => setCouponForm({ ...couponForm, discountPercent: e.target.value })}
+                        className="admin-field mt-1"
+                      />
+                    </label>
+                    <label className="admin-label">
+                      Min Order Spend (₹)
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Optional (e.g. 499)"
+                        value={couponForm.minCartAmount}
+                        onChange={(e) => setCouponForm({ ...couponForm, minCartAmount: e.target.value })}
+                        className="admin-field mt-1"
+                      />
+                    </label>
+                  </div>
+
                   <label className="admin-label">
-                    Min Order Spend (₹)
+                    Expiry Date
                     <input
-                      type="number"
-                      min="0"
-                      placeholder="Optional (e.g. 499)"
-                      value={couponForm.minCartAmount}
-                      onChange={(e) => setCouponForm({ ...couponForm, minCartAmount: e.target.value })}
+                      required
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={couponForm.expiresAt}
+                      onChange={(e) => setCouponForm({ ...couponForm, expiresAt: e.target.value })}
                       className="admin-field mt-1"
                     />
                   </label>
-                </div>
 
-                <label className="admin-label">
-                  Expiry Date
-                  <input
-                    required
-                    type="date"
-                    min={new Date().toISOString().split('T')[0]}
-                    value={couponForm.expiresAt}
-                    onChange={(e) => setCouponForm({ ...couponForm, expiresAt: e.target.value })}
-                    className="admin-field mt-1"
-                  />
-                </label>
+                  <label className="admin-label">
+                    Description / Offer Note
+                    <input
+                      placeholder="e.g. 15% off for all Rabi season certified seeds"
+                      maxLength="120"
+                      value={couponForm.description}
+                      onChange={(e) => setCouponForm({ ...couponForm, description: e.target.value })}
+                      className="admin-field mt-1"
+                    />
+                  </label>
 
-                <label className="admin-label">
-                  Description / Offer Note
-                  <input
-                    placeholder="e.g. 15% off for all Rabi season certified seeds"
-                    maxLength="120"
-                    value={couponForm.description}
-                    onChange={(e) => setCouponForm({ ...couponForm, description: e.target.value })}
-                    className="admin-field mt-1"
-                  />
-                </label>
-
-                <div className="admin-form-actions">
-                  <button disabled={saving} type="submit" className="admin-primary-button">
-                    {saving ? 'Creating…' : 'Create Coupon'}
-                  </button>
-                </div>
-              </form>
+                  <div className="admin-form-actions">
+                    <button disabled={saving} type="submit" className="admin-primary-button">
+                      {saving ? 'Creating…' : 'Create Custom Coupon'}
+                    </button>
+                  </div>
+                </form>
+              </div>
 
               {/* Coupons List Panel */}
               <section className="admin-panel admin-inventory-panel">
@@ -823,13 +1061,27 @@ export default function AdminPage() {
                               </span>
                             </td>
                             <td>
-                              {c.allowedEmail ? (
-                                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--c-green2)' }}>
-                                  👤 {c.allowedEmail}
+                              {c.targetType === 'all' ? (
+                                <span style={{ fontSize: '11px', fontWeight: '750', color: 'var(--c-green2)' }}>
+                                  🌐 All Users (બધા ગ્રાહકો)
                                 </span>
+                              ) : c.allowedEmail ? (
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: '750', color: '#f59e0b' }}>
+                                    👤 {c.assignedUserName || c.allowedEmail}
+                                  </span>
+                                  {c.assignedUserName && c.allowedEmail && (
+                                    <span style={{ fontSize: '10px', color: 'var(--c-text3)' }}>{c.allowedEmail}</span>
+                                  )}
+                                  {c.allowedEmails?.length > 1 && (
+                                    <span style={{ fontSize: '10px', color: 'var(--c-green2)' }}>
+                                      +{c.allowedEmails.length - 1} more
+                                    </span>
+                                  )}
+                                </div>
                               ) : (
                                 <span style={{ fontSize: '11px', color: 'var(--c-text3)' }}>
-                                  Any user with code
+                                  🌐 All Users (બધા)
                                 </span>
                               )}
                             </td>
@@ -851,6 +1103,26 @@ export default function AdminPage() {
                             </td>
                             <td>
                               <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSelectCouponForDispatch(c)}
+                                  title="Send or assign this coupon to a customer or all users"
+                                  style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '5px',
+                                    border: '1px solid var(--c-green2)',
+                                    background: 'var(--c-badge-bg)',
+                                    color: 'var(--c-badge-text)',
+                                    fontSize: '11px',
+                                    fontWeight: '750',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '3px',
+                                  }}
+                                >
+                                  📤 Send
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => handleToggleCoupon(c)}

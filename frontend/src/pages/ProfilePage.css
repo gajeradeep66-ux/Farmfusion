@@ -571,6 +571,26 @@ html[data-theme='dark'] .profile-tab-btn.active {
   font-weight: 800;
 }
 
+.profile-coupon-exclusive-tag {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.profile-coupon-all-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--c-surface2);
+  color: var(--c-text3);
+  border: 1px solid var(--c-border);
+}
+
 .profile-coupon-exp {
   font-size: 11px;
   color: var(--c-text3);

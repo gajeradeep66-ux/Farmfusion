@@ -401,13 +401,84 @@ router.patch('/coupons/:id/assign', async (req, res) => {
     if (!coupon) return res.status(404).json({ message: 'Coupon not found' });
 
     coupon.targetType = targetType === 'selected' ? 'selected' : 'all';
-    coupon.allowedEmail = coupon.targetType === 'selected' && allowedEmail ? allowedEmail.trim().toLowerCase() : '';
-    coupon.assignedUserName = coupon.targetType === 'selected' && assignedUserName ? assignedUserName.trim() : '';
+    if (coupon.targetType === 'selected') {
+      const email = allowedEmail ? allowedEmail.trim().toLowerCase() : '';
+      coupon.allowedEmail = email;
+      if (!Array.isArray(coupon.allowedEmails)) coupon.allowedEmails = [];
+      if (email && !coupon.allowedEmails.includes(email)) coupon.allowedEmails.push(email);
+      coupon.assignedUserName = assignedUserName ? assignedUserName.trim() : '';
+    } else {
+      coupon.allowedEmail = '';
+      coupon.allowedEmails = [];
+      coupon.assignedUserName = '';
+    }
 
     await coupon.save();
     res.json(coupon);
   } catch (error) {
     res.status(500).json({ message: 'Could not assign coupon', error: error.message });
+  }
+});
+
+router.post('/coupons/dispatch', async (req, res) => {
+  try {
+    const { couponTarget, selectedCouponIds, userTarget, allowedEmail, assignedUserName } = req.body;
+
+    let targetCoupons = [];
+    if (couponTarget === 'all') {
+      targetCoupons = await Coupon.find({});
+    } else {
+      if (!Array.isArray(selectedCouponIds) || selectedCouponIds.length === 0) {
+        return res.status(400).json({ message: 'Please select at least one coupon to dispatch.' });
+      }
+      targetCoupons = await Coupon.find({ _id: { $in: selectedCouponIds } });
+    }
+
+    if (!targetCoupons.length) {
+      return res.status(404).json({ message: 'No matching coupons found to dispatch.' });
+    }
+
+    const isSelectedUser = userTarget === 'selected';
+    const email = isSelectedUser && allowedEmail ? allowedEmail.trim().toLowerCase() : '';
+    const name = isSelectedUser && assignedUserName ? assignedUserName.trim() : '';
+
+    if (isSelectedUser && !email) {
+      return res.status(400).json({ message: 'Please select or enter a customer email address.' });
+    }
+
+    const updated = [];
+    for (const c of targetCoupons) {
+      if (isSelectedUser) {
+        c.targetType = 'selected';
+        c.allowedEmail = email;
+        if (!Array.isArray(c.allowedEmails)) c.allowedEmails = [];
+        if (!c.allowedEmails.includes(email)) {
+          c.allowedEmails.push(email);
+        }
+        if (name) c.assignedUserName = name;
+      } else {
+        c.targetType = 'all';
+        c.allowedEmail = '';
+        c.allowedEmails = [];
+        c.assignedUserName = '';
+      }
+      await c.save();
+      updated.push(c);
+    }
+
+    const allCoupons = await Coupon.find().sort({ createdAt: -1 });
+
+    const message = isSelectedUser
+      ? `✓ Successfully sent ${updated.length} coupon(s) to ${name ? `${name} (${email})` : email}!`
+      : `✓ Successfully broadcasted ${updated.length} coupon(s) to All Customers!`;
+
+    res.json({
+      message,
+      count: updated.length,
+      coupons: allCoupons,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Could not dispatch coupons', error: error.message });
   }
 });
 

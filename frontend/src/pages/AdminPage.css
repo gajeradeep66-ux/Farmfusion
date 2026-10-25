@@ -543,3 +543,93 @@ html[data-theme='dark'] .admin-order-status-select {
   color: #f8fafc;
 }
 
+/* ── Coupon Dispatcher Styles ── */
+.admin-dispatch-card {
+  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  background: var(--c-surface-strong);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  margin-bottom: 18px;
+}
+.admin-dispatch-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #059669, #10b981, #f59e0b);
+}
+.admin-panel-highlight {
+  box-shadow: 0 0 0 3px #10b981, 0 10px 30px rgba(16, 185, 129, 0.28) !important;
+  transform: translateY(-2px);
+}
+.admin-dispatch-step {
+  margin-top: 13px;
+  background: var(--c-surface2);
+  padding: 13px 14px;
+  border-radius: 13px;
+  border: 1px solid var(--c-border);
+}
+.admin-dispatch-step-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--c-text);
+  margin-bottom: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.admin-dispatch-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.admin-dispatch-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1.5px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text2);
+  transition: all 0.2s ease;
+}
+.admin-dispatch-option:hover {
+  border-color: var(--c-green2);
+  color: var(--c-text);
+}
+.admin-dispatch-option.active {
+  border-color: var(--c-green);
+  background: var(--c-badge-bg);
+  color: var(--c-badge-text);
+}
+.admin-dispatch-preview {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border: 1px solid var(--c-badge-border);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--c-text);
+}
+.admin-dispatch-preview strong {
+  color: var(--c-green2);
+  font-weight: 800;
+}
+.admin-dispatch-note {
+  display: block;
+  font-size: 11px;
+  color: var(--c-text3);
+  margin-top: 5px;
+}
+
+

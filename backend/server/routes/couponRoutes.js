@@ -39,6 +39,7 @@ router.get('/my-coupons', async (req, res) => {
       $or: [
         { targetType: 'all' },
         { allowedEmail: userEmail },
+        { allowedEmails: userEmail },
       ],
     };
 
@@ -83,14 +84,20 @@ router.post('/validate', async (req, res) => {
     }
 
     // Check if coupon is restricted to a specific grower/user email
-    if (coupon.allowedEmail && coupon.allowedEmail.trim() !== '') {
-      const normalizedAllowed = coupon.allowedEmail.trim().toLowerCase();
+    if (coupon.targetType === 'selected') {
+      const allowedList = [
+        coupon.allowedEmail,
+        ...(Array.isArray(coupon.allowedEmails) ? coupon.allowedEmails : []),
+      ]
+        .filter(Boolean)
+        .map((e) => e.trim().toLowerCase());
+
       const normalizedUser = userEmail ? String(userEmail).trim().toLowerCase() : '';
 
-      if (!normalizedUser || normalizedUser !== normalizedAllowed) {
+      if (allowedList.length > 0 && (!normalizedUser || !allowedList.includes(normalizedUser))) {
         return res.status(403).json({
           valid: false,
-          message: `This coupon was issued exclusively for ${coupon.allowedEmail}. Please log in with that account.`,
+          message: `This coupon was issued exclusively for selected customer account(s). Please log in with an eligible account.`,
         });
       }
     }
