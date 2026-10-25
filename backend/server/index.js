@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
@@ -79,30 +80,46 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsPath));
 
-app.get('/', (req, res) => {
-  res.json({
-    status: 'ok',
-    name: 'FarmFusion API',
-    message: 'FarmFusion Backend API is running successfully.',
-    healthCheck: '/api/health',
-    frontendUrl: process.env.FRONTEND_URL || 'https://farmfusion-web.onrender.com',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'FarmFusion API is running',
-    timestamp: new Date().toISOString(),
-  });
-});
-
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/about', aboutRoutes);
+
+const candidateFrontendPaths = [
+  path.resolve(__dirname, '../../frontend/dist'),
+  path.resolve(__dirname, '../public'),
+  path.resolve(__dirname, '../dist'),
+  path.resolve(process.cwd(), 'frontend/dist'),
+  path.resolve(process.cwd(), '../frontend/dist'),
+  path.resolve(process.cwd(), 'dist'),
+];
+
+const frontendDistPath = candidateFrontendPaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
+
+if (frontendDistPath) {
+  console.log(`Serving frontend static files from: ${frontendDistPath}`);
+  app.use(express.static(frontendDistPath));
+
+  app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'ok',
+      name: 'FarmFusion API',
+      message: 'FarmFusion Backend API is running successfully. Frontend build not detected.',
+      healthCheck: '/api/health',
+      frontendUrl: process.env.FRONTEND_URL || 'https://farmfusion-web.onrender.com',
+      timestamp: new Date().toISOString(),
+    });
+  });
+}
 
 const ensureDefaultData = async () => {
   for (const seed of seedProducts) {
