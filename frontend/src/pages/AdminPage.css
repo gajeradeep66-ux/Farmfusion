@@ -465,8 +465,14 @@ textarea.admin-field { min-height: 105px; resize: vertical; line-height: 1.6; }
   .admin-product-row > img { width: 40px; height: 40px; }
   .admin-featured-badge { display: none; }
 }
-@media (max-width: 760px) {
-  .admin-page { padding-top: 20px; }
+@media (max-width: 768px) {
+  .admin-page {
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+    margin-inline: auto !important;
+    padding-top: 16px !important;
+    padding-bottom: 130px !important;
+  }
   .admin-hero { min-height: 178px; align-items: flex-start; flex-direction: column; padding: 25px; }
   .admin-hero h1 { font-size: 2rem; }
   .admin-refresh { align-self: flex-start; }
