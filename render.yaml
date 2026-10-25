@@ -11,7 +11,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
-        value: 22.12.0
+        value: "22.12.0"
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
@@ -26,9 +26,8 @@ services:
     name: farmfusion-web
     runtime: static
     rootDir: frontend
-    plan: free
     buildCommand: npm ci --include=dev && npm run build
-    staticPublishPath: ./dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         value: https://farmfusion-api.onrender.com
