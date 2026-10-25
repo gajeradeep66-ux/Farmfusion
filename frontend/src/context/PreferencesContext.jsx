@@ -27,6 +27,7 @@ const translations = {
     'Farm essentials': 'Farm essentials', All: 'All', 'products available': 'products available',
     'Find seeds, tools, soil care...': 'Find seeds, tools, soil care...', Add: 'Add', 'Sold out': 'Sold out',
     'Ready for your next season': 'Ready for your next season', 'Currently out of stock': 'Currently out of stock',
+    'In Stock': 'In Stock',
     'THE FARMFUSION COLLECTION': 'THE FARMFUSION COLLECTION',
   },
   gu: {
@@ -55,6 +56,7 @@ const translations = {
     'Farm essentials': 'ખેતીની જરૂરી વસ્તુઓ', All: 'બધા', 'products available': 'ઉત્પાદનો ઉપલબ્ધ',
     'Find seeds, tools, soil care...': 'બીજ, સાધનો અને માટીની સંભાળ શોધો...', Add: 'ઉમેરો', 'Sold out': 'સ્ટોક સમાપ્ત',
     'Ready for your next season': 'આગામી મોસમ માટે તૈયાર', 'Currently out of stock': 'હાલમાં સ્ટોકમાં નથી',
+    'In Stock': 'સ્ટોકમાં ઉપલબ્ધ',
     'THE FARMFUSION COLLECTION': 'ફાર્મફ્યુઝન સંગ્રહ',
   },
   hi: {
@@ -83,6 +85,7 @@ const translations = {
     'Farm essentials': 'खेती की ज़रूरी चीज़ें', All: 'सभी', 'products available': 'उत्पाद उपलब्ध',
     'Find seeds, tools, soil care...': 'बीज, औज़ार और मिट्टी की देखभाल खोजें...', Add: 'जोड़ें', 'Sold out': 'स्टॉक खत्म',
     'Ready for your next season': 'अगले मौसम के लिए तैयार', 'Currently out of stock': 'अभी स्टॉक में नहीं',
+    'In Stock': 'स्टॉक में उपलब्ध',
     'THE FARMFUSION COLLECTION': 'फार्मफ्यूज़न संग्रह',
   },
 };

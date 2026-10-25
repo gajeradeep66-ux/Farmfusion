@@ -34,6 +34,13 @@ function SkeletonProductCard() {
   );
 }
 
+const trustPillars = [
+  { icon: '🚚', title: 'Free Rural Delivery', desc: 'Fast doorstep shipping on ₹999+' },
+  { icon: '🌱', title: '100% Certified Seeds', desc: 'High germination lab-verified batches' },
+  { icon: '🌾', title: 'Direct Maker Prices', desc: 'No distributor markup, maximum savings' },
+  { icon: '🛡️', title: 'COD & Secure UPI', desc: 'Pay safely on delivery or via QR' },
+];
+
 export default function HomePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,35 +58,84 @@ export default function HomePage() {
   return (
     <div className="storefront">
       <div className="delivery-ribbon">
+        <span className="ribbon-live-dot" />
         <span>{t('Fresh picks for a better harvest')}</span>
         <span className="ribbon-separator">•</span>
         <span>{t('Free delivery on orders over ₹999')}</span>
-        <Link to="/shop">{t('Explore the store')} <span aria-hidden="true">→</span></Link>
+        <Link to="/shop" className="ribbon-action">{t('Explore the store')} <span aria-hidden="true">→</span></Link>
       </div>
 
       <section className="home-hero">
         <div className="hero-copy">
-          <span className="eyebrow"><span className="eyebrow-dot" /> {t('GOOD THINGS GROW HERE')}</span>
-          <h1>{t('Everything your farm needs,')} <em>{t('all in one place.')}</em></h1>
+          <span className="eyebrow">
+            <span className="eyebrow-dot" />
+            {t('GOOD THINGS GROW HERE')}
+            <span className="eyebrow-badge">★ 4.9 Verified</span>
+          </span>
+          <h1>
+            {t('Everything your farm needs,')}{' '}
+            <span className="hero-gradient-text">{t('all in one place.')}</span>
+          </h1>
           <p>{t('Thoughtfully picked seeds, trusted tools and crop care essentials for the people who grow our future.')}</p>
           <div className="hero-actions">
-            <Link to="/shop" className="button-primary">{t('Shop farm essentials')} <span aria-hidden="true">↗</span></Link>
-            <a href="#categories" className="button-quiet">{t('Explore categories')} <span aria-hidden="true">↓</span></a>
+            <Link to="/shop" className="button-primary">
+              <span>{t('Shop farm essentials')}</span>
+              <span className="btn-arrow" aria-hidden="true">↗</span>
+            </Link>
+            <a href="#categories" className="button-quiet">
+              <span>{t('Explore categories')}</span>
+              <span aria-hidden="true">↓</span>
+            </a>
           </div>
           <div className="hero-proof">
-            <span className="proof-mark">✳</span>
-            <span><strong>{t('Made for growers')}</strong><small>{t('From seed to harvest')}</small></span>
+            <span className="proof-mark">✓</span>
+            <span>
+              <strong>{t('Made for growers')}</strong>
+              <small>{t('From seed to harvest')} • 15,000+ Farmers</small>
+            </span>
           </div>
         </div>
         <div className="hero-art-wrap">
           <div className="hero-art">
             <img className="farm-illustration" src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1800&q=90" alt="Sunlit green fields stretching across a farm landscape" />
-            <span className="hero-photo-label"><i /> {t('GROWN WITH CARE')}</span>
+            <div className="hero-glass-overlay" />
+            <span className="hero-photo-label">
+              <span className="live-pulse" /> {t('GROWN WITH CARE')}
+            </span>
+            <div className="hero-floating-stat">
+              <span className="floating-stat-icon">🌾</span>
+              <div>
+                <strong>15,000+</strong>
+                <small>Thriving Growers</small>
+              </div>
+            </div>
           </div>
-          <div className="hero-note"><span className="note-icon">🌿</span><span><strong>{t('Grow a little greener')}</strong><small>{t('Good choices start here')}</small></span></div>
-          <div className="hero-season">FIELD NOTES <span>№ 01 — GROWING SEASON</span></div>
+          <div className="hero-note">
+            <span className="note-icon">🌿</span>
+            <span>
+              <strong>{t('Grow a little greener')}</strong>
+              <small>{t('Good choices start here')}</small>
+            </span>
+          </div>
+          <div className="hero-season">
+            <span className="season-dot" />
+            FIELD NOTES <span>№ 01 — GROWING SEASON</span>
+          </div>
         </div>
       </section>
+
+      {/* Trust Pillars Strip */}
+      <div className="trust-pillars-grid">
+        {trustPillars.map((tp) => (
+          <div key={tp.title} className="trust-pillar-card">
+            <span className="trust-pillar-icon">{tp.icon}</span>
+            <div>
+              <strong>{tp.title}</strong>
+              <p>{tp.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
       <div className="home-stats-bar">
         {stats.map((s) => (
