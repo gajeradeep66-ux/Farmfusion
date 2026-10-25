@@ -86,12 +86,13 @@ export default function Navbar() {
 
         <div className="header-actions">
           <div className="header-preferences" aria-label="Display preferences">
-            <label className="language-picker">
+            <label className="language-picker" title="Change Language / ભાષા બદલો">
+              <span className="language-picker-icon" aria-hidden="true">🌐</span>
               <span className="sr-only">Language</span>
               <select value={language} onChange={(e) => setLanguage(e.target.value)} aria-label="Language">
-                <option value="en">EN</option>
-                <option value="gu">ગુ</option>
-                <option value="hi">हि</option>
+                <option value="en">English</option>
+                <option value="gu">ગુજરાતી (Gujarati)</option>
+                <option value="hi">हिन्दी (Hindi)</option>
               </select>
             </label>
             <button className="theme-toggle" type="button" onClick={toggleTheme} aria-label={theme === 'dark' ? t('Light theme') : t('Dark theme')}>
@@ -164,6 +165,36 @@ export default function Navbar() {
                       </Link>
                     )}
                   </nav>
+
+                  <div className="udrop-divider" />
+
+                  {/* Language switch buttons */}
+                  <div className="udrop-lang-section">
+                    <span className="udrop-lang-title">🌐 {language === 'gu' ? 'ભાષા' : language === 'hi' ? 'भाषा' : 'Language'}</span>
+                    <div className="udrop-lang-pills">
+                      <button
+                        type="button"
+                        className={`udrop-lang-btn${language === 'en' ? ' active' : ''}`}
+                        onClick={() => setLanguage('en')}
+                      >
+                        English
+                      </button>
+                      <button
+                        type="button"
+                        className={`udrop-lang-btn${language === 'gu' ? ' active' : ''}`}
+                        onClick={() => setLanguage('gu')}
+                      >
+                        ગુજરાતી (Gujarati)
+                      </button>
+                      <button
+                        type="button"
+                        className={`udrop-lang-btn${language === 'hi' ? ' active' : ''}`}
+                        onClick={() => setLanguage('hi')}
+                      >
+                        हिन्दी (Hindi)
+                      </button>
+                    </div>
+                  </div>
 
                   <div className="udrop-divider" />
 
