@@ -2,6 +2,10 @@
 
 Online agricultural marketplace for seeds, farming tools, and crop care essentials.
 
+## 🌐 Live Website & Production URL
+- **Live Application**: [https://farmfusion-api.onrender.com](https://farmfusion-api.onrender.com)
+- **API Health Check**: [https://farmfusion-api.onrender.com/api/health](https://farmfusion-api.onrender.com/api/health)
+
 ## 📁 Project Structure
 
 - `frontend/` - React 19 + Vite + Tailwind CSS
