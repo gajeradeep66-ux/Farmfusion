@@ -2571,9 +2571,17 @@ body {
 }
 .home-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  gap: clamp(32px, 5vw, 80px);
-  padding: 48px 0 36px;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(28px, 4.5vw, 64px);
+  padding: clamp(28px, 4vw, 44px);
+  margin-top: 14px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(16, 185, 129, 0.1), transparent 40%),
+    radial-gradient(circle at 88% 82%, rgba(52, 211, 153, 0.08), transparent 42%),
+    var(--c-surface-strong);
+  border: 1.5px solid var(--c-border);
+  box-shadow: 0 16px 40px var(--c-shadow);
   align-items: center;
 }
 .hero-copy {
@@ -2787,17 +2795,24 @@ html[data-theme='dark'] .hero-floating-stat {
 
 .hero-note {
   position: absolute;
-  left: -24px;
-  bottom: -18px;
+  left: 20px;
+  bottom: 20px;
   z-index: 3;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 18px;
+  padding: 10px 16px;
   border-radius: 16px;
-  background: var(--c-surface);
-  border: 1.5px solid var(--c-border);
-  box-shadow: 0 16px 36px var(--c-shadow2);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+html[data-theme='dark'] .hero-note {
+  background: rgba(14, 28, 20, 0.9);
+  border-color: rgba(52, 211, 153, 0.25);
+  color: #f8fafc;
 }
 .note-icon {
   display: grid;
@@ -2813,21 +2828,28 @@ html[data-theme='dark'] .hero-floating-stat {
 
 .hero-season {
   position: absolute;
-  top: -12px;
-  right: 18px;
+  top: 20px;
+  right: 20px;
   z-index: 3;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  box-shadow: 0 8px 20px var(--c-shadow);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.12em;
   color: var(--c-green);
+}
+html[data-theme='dark'] .hero-season {
+  background: rgba(14, 28, 20, 0.9);
+  border-color: rgba(52, 211, 153, 0.25);
+  color: #34d399;
 }
 .season-dot {
   width: 6px;
@@ -5363,5 +5385,116 @@ select:focus-visible {
     -webkit-overflow-scrolling: touch;
     border-radius: 12px;
     border: 1px solid var(--c-border);
+  }
+
+  /* ── Mobile Hero Section Polish ── */
+  .home-hero {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 20px 14px !important;
+    border-radius: 20px !important;
+    margin-top: 10px !important;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2rem, 7.5vw, 2.6rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  .hero-art-wrap {
+    width: 100%;
+  }
+
+  .hero-art {
+    width: 100%;
+    aspect-ratio: 16 / 11 !important;
+    min-height: 230px !important;
+    border-radius: 18px !important;
+  }
+
+  .hero-floating-stat {
+    top: 10px !important;
+    left: 10px !important;
+    padding: 6px 10px !important;
+    border-radius: 12px !important;
+    gap: 7px !important;
+  }
+  .hero-floating-stat strong {
+    font-size: 13px !important;
+  }
+  .hero-floating-stat small {
+    font-size: 9px !important;
+  }
+  .floating-stat-icon {
+    font-size: 17px !important;
+  }
+
+  .hero-season {
+    display: none !important; /* Hide secondary chip on mobile so photo remains spacious */
+  }
+
+  .hero-note {
+    bottom: 10px !important;
+    left: 10px !important;
+    padding: 6px 10px !important;
+    border-radius: 12px !important;
+    gap: 6px !important;
+  }
+  .hero-note strong {
+    font-size: 11px !important;
+  }
+  .hero-note small {
+    font-size: 9px !important;
+  }
+  .note-icon {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 12px !important;
+  }
+
+  .hero-photo-label {
+    bottom: 10px !important;
+    right: 10px !important;
+    padding: 5px 9px !important;
+    font-size: 8.5px !important;
+  }
+
+  /* ── Mobile Trust Pillars (2x2 Grid) ── */
+  .trust-pillars-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin: 18px 0 !important;
+  }
+
+  .trust-pillar-card {
+    padding: 12px 10px !important;
+    gap: 10px !important;
+    border-radius: 14px !important;
+  }
+  .trust-pillar-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 18px !important;
+  }
+  .trust-pillar-card strong {
+    font-size: 12px !important;
+  }
+  .trust-pillar-card p {
+    font-size: 10px !important;
+  }
+
+  /* ── Mobile Stats Bar (2x2 Grid) ── */
+  .home-stats-bar {
+    grid-template-columns: repeat(2, 1fr) !important;
+    margin: 10px 0 28px !important;
+  }
+  .home-stat {
+    padding: 14px 10px !important;
+  }
+  .home-stat strong {
+    font-size: 1.6rem !important;
+  }
+  .home-stat span {
+    font-size: 9.5px !important;
   }
 }

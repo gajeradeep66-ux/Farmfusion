@@ -99,9 +99,8 @@ export default function HomePage() {
           <div className="hero-art">
             <img className="farm-illustration" src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1800&q=90" alt="Sunlit green fields stretching across a farm landscape" />
             <div className="hero-glass-overlay" />
-            <span className="hero-photo-label">
-              <span className="live-pulse" /> {t('GROWN WITH CARE')}
-            </span>
+            
+            {/* Top-Left: Farmers Stat */}
             <div className="hero-floating-stat">
               <span className="floating-stat-icon">🌾</span>
               <div>
@@ -109,17 +108,26 @@ export default function HomePage() {
                 <small>Thriving Growers</small>
               </div>
             </div>
-          </div>
-          <div className="hero-note">
-            <span className="note-icon">🌿</span>
-            <span>
-              <strong>{t('Grow a little greener')}</strong>
-              <small>{t('Good choices start here')}</small>
+
+            {/* Top-Right: Season Badge */}
+            <div className="hero-season">
+              <span className="season-dot" />
+              FIELD NOTES <span>№ 01 — GROWING SEASON</span>
+            </div>
+
+            {/* Bottom-Left: Growing Note */}
+            <div className="hero-note">
+              <span className="note-icon">🌿</span>
+              <div>
+                <strong>{t('Grow a little greener')}</strong>
+                <small>{t('Good choices start here')}</small>
+              </div>
+            </div>
+
+            {/* Bottom-Right: Grown with Care Pill */}
+            <span className="hero-photo-label">
+              <span className="live-pulse" /> {t('GROWN WITH CARE')}
             </span>
-          </div>
-          <div className="hero-season">
-            <span className="season-dot" />
-            FIELD NOTES <span>№ 01 — GROWING SEASON</span>
           </div>
         </div>
       </section>
