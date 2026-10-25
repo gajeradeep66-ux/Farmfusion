@@ -1,12 +1,52 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import Coupon from '../models/Coupon.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
 /* ── Public active coupons disabled — coupons must be provided by Admin ── */
 router.get('/active', (req, res) => {
-  // Coupons are private and given by Admin to users directly
+  // Public directory is disabled; users check their profile or enter code given by admin
   res.json([]);
+});
+
+/* ── Fetch coupons assigned by Admin to the logged-in user ──── */
+router.get('/my-coupons', async (req, res) => {
+  try {
+    let userEmail = '';
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (user) userEmail = user.email.toLowerCase();
+      } catch (e) {}
+    }
+    if (!userEmail && req.query.email) {
+      userEmail = String(req.query.email).trim().toLowerCase();
+    }
+
+    if (!userEmail) {
+      return res.status(401).json({ message: 'User authentication required' });
+    }
+
+    const now = new Date();
+    const query = {
+      isActive: true,
+      expiresAt: { $gt: now },
+      $or: [
+        { targetType: 'all' },
+        { allowedEmail: userEmail },
+      ],
+    };
+
+    const coupons = await Coupon.find(query).sort({ discountPercent: -1 });
+    res.json(coupons);
+  } catch (error) {
+    res.status(500).json({ message: 'Could not fetch coupons', error: error.message });
+  }
 });
 
 /* ── Validate coupon code in cart ───────────────────────────── */

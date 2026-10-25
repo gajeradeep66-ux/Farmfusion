@@ -38,6 +38,16 @@ const couponSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
+    targetType: {
+      type: String,
+      enum: ['all', 'selected'],
+      default: 'all',
+    },
+    assignedUserName: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     timesUsed: {
       type: Number,
       default: 0,

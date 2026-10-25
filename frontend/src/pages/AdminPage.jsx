@@ -60,7 +60,7 @@ export default function AdminPage() {
   const [busyUser, setBusyUser] = useState('');
   const [busyOrder, setBusyOrder] = useState('');
   const [coupons, setCoupons] = useState([]);
-  const [couponForm, setCouponForm] = useState({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '', allowedEmail: '' });
+  const [couponForm, setCouponForm] = useState({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '', targetType: 'all', allowedEmail: '', assignedUserName: '' });
   const [busyCoupon, setBusyCoupon] = useState('');
   const productFileRef = useRef(null);
   const aboutFileRef = useRef(null);
@@ -236,22 +236,57 @@ export default function AdminPage() {
     setMessage('');
     setError('');
     try {
+      const isSelected = couponForm.targetType === 'selected';
       const payload = {
         code: couponForm.code.trim().toUpperCase(),
         discountPercent: Number(couponForm.discountPercent),
         minCartAmount: Number(couponForm.minCartAmount || 0),
         expiresAt: couponForm.expiresAt ? new Date(couponForm.expiresAt).toISOString() : new Date(Date.now() + 14 * 86400000).toISOString(),
         description: couponForm.description,
-        allowedEmail: couponForm.allowedEmail?.trim()?.toLowerCase() || '',
+        targetType: isSelected ? 'selected' : 'all',
+        allowedEmail: isSelected && couponForm.allowedEmail ? couponForm.allowedEmail.trim().toLowerCase() : '',
+        assignedUserName: isSelected && couponForm.assignedUserName ? couponForm.assignedUserName.trim() : '',
       };
       const { data } = await api.post('/admin/coupons', payload);
       setCoupons((prev) => [data, ...prev]);
-      setCouponForm({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '', allowedEmail: '' });
-      setMessage(`✓ Coupon ${data.code} (${data.discountPercent}% OFF) created successfully!`);
+      setCouponForm({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '', targetType: 'all', allowedEmail: '', assignedUserName: '' });
+      setMessage(`✓ Coupon ${data.code} (${data.discountPercent}% OFF) created and sent to ${data.targetType === 'all' ? 'All Customers' : data.allowedEmail}!`);
     } catch (err) {
       setError(err.response?.data?.message || 'Could not create coupon.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSeedCoupons = async () => {
+    setSaving(true);
+    setMessage('');
+    setError('');
+    try {
+      const { data } = await api.post('/admin/coupons/seed');
+      setCoupons(data.coupons || []);
+      setMessage(`✓ ${data.count} Default Kisan Coupons available!`);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not seed default coupons.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleQuickAssignCoupon = async (c, targetType, email, name) => {
+    setBusyCoupon(c._id);
+    try {
+      const { data } = await api.patch(`/admin/coupons/${c._id}/assign`, {
+        targetType,
+        allowedEmail: email,
+        assignedUserName: name,
+      });
+      setCoupons((prev) => prev.map((item) => (item._id === c._id ? data : item)));
+      setMessage(`✓ Coupon ${c.code} is now sent to ${targetType === 'all' ? 'All Customers' : (email || 'Selected Customer')}.`);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not assign coupon.');
+    } finally {
+      setBusyCoupon('');
     }
   };
 
@@ -547,26 +582,112 @@ export default function AdminPage() {
                     <p className="admin-section-label">CREATE PROMO</p>
                     <h2>New Discount Coupon</h2>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleAutoCreateCoupon}
-                    disabled={saving}
-                    style={{
-                      background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                      color: '#fff',
-                      border: 0,
-                      padding: '8px 14px',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    ⚡ Auto-Generate
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={handleSeedCoupons}
+                      disabled={saving}
+                      style={{
+                        background: 'var(--c-surface2)',
+                        color: 'var(--c-green2)',
+                        border: '1.5px solid var(--c-border)',
+                        padding: '7px 12px',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: '750',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ⚡ Seed 16 Standard Coupons
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAutoCreateCoupon}
+                      disabled={saving}
+                      style={{
+                        background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                        color: '#fff',
+                        border: 0,
+                        padding: '7px 12px',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      + Quick Auto-Coupon
+                    </button>
+                  </div>
+                </div>
+
+                {/* Target Audience: All vs Selected */}
+                <div style={{ marginBottom: '14px', background: 'var(--c-surface2)', padding: '12px 14px', borderRadius: '12px', border: '1px solid var(--c-border)' }}>
+                  <span className="admin-label" style={{ marginBottom: '8px', display: 'block' }}>Target Audience (કોને કૂપન મોકલવું):</span>
+                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: couponForm.targetType === 'all' ? '800' : '500', color: couponForm.targetType === 'all' ? 'var(--c-green)' : 'var(--c-text2)' }}>
+                      <input
+                        type="radio"
+                        name="targetType"
+                        value="all"
+                        checked={couponForm.targetType === 'all'}
+                        onChange={() => setCouponForm({ ...couponForm, targetType: 'all', allowedEmail: '', assignedUserName: '' })}
+                      />
+                      🌐 All Users (બધા ગ્રાહકો માટે)
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', fontWeight: couponForm.targetType === 'selected' ? '800' : '500', color: couponForm.targetType === 'selected' ? 'var(--c-green)' : 'var(--c-text2)' }}>
+                      <input
+                        type="radio"
+                        name="targetType"
+                        value="selected"
+                        checked={couponForm.targetType === 'selected'}
+                        onChange={() => setCouponForm({ ...couponForm, targetType: 'selected' })}
+                      />
+                      👤 Selected User Only (પસંદગીના યૂઝર માટે)
+                    </label>
+                  </div>
+
+                  {couponForm.targetType === 'selected' && (
+                    <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed var(--c-border)' }}>
+                      <label className="admin-label">
+                        Select Registered Customer:
+                        <select
+                          className="admin-field mt-1"
+                          value={couponForm.allowedEmail}
+                          onChange={(e) => {
+                            const found = users.find((u) => u.email === e.target.value);
+                            setCouponForm({
+                              ...couponForm,
+                              allowedEmail: e.target.value,
+                              assignedUserName: found ? found.name : '',
+                            });
+                          }}
+                        >
+                          <option value="">-- Choose customer or type email below --</option>
+                          {users.map((u) => (
+                            <option key={u._id} value={u.email}>
+                              {u.name} ({u.email})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="admin-label mt-2">
+                        Or Customer Email Address:
+                        <input
+                          type="email"
+                          placeholder="e.g. grower@example.com"
+                          value={couponForm.allowedEmail || ''}
+                          onChange={(e) => setCouponForm({ ...couponForm, allowedEmail: e.target.value })}
+                          className="admin-field mt-1"
+                        />
+                      </label>
+                      <small style={{ fontSize: '11px', color: 'var(--c-green2)', marginTop: '4px', display: 'block' }}>
+                        🔒 This coupon will appear exclusively in this customer's Profile!
+                      </small>
+                    </div>
+                  )}
                 </div>
 
                 <label className="admin-label">
@@ -618,20 +739,6 @@ export default function AdminPage() {
                     onChange={(e) => setCouponForm({ ...couponForm, expiresAt: e.target.value })}
                     className="admin-field mt-1"
                   />
-                </label>
-
-                <label className="admin-label">
-                  Assign to Specific Customer Email (Optional)
-                  <input
-                    type="email"
-                    placeholder="e.g. grower@example.com (Leave blank for any user given the code)"
-                    value={couponForm.allowedEmail || ''}
-                    onChange={(e) => setCouponForm({ ...couponForm, allowedEmail: e.target.value })}
-                    className="admin-field mt-1"
-                  />
-                  <small style={{ fontSize: '10px', color: 'var(--c-text3)', marginTop: '2px', display: 'block' }}>
-                    🔒 Leave empty to let any customer with this code use it. If email is provided, ONLY that specific customer can use it.
-                  </small>
                 </label>
 
                 <label className="admin-label">
@@ -789,19 +896,19 @@ export default function AdminPage() {
                       <p style={{ margin: '0 0 10px' }}>No coupons created yet.</p>
                       <button
                         type="button"
-                        onClick={handleAutoCreateCoupon}
+                        onClick={handleSeedCoupons}
                         style={{
-                          background: 'var(--c-green)',
+                          background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
                           color: '#fff',
                           border: 0,
-                          padding: '6px 14px',
-                          borderRadius: '6px',
+                          padding: '8px 18px',
+                          borderRadius: '8px',
                           fontSize: '12px',
-                          fontWeight: '700',
+                          fontWeight: '800',
                           cursor: 'pointer',
                         }}
                       >
-                        ⚡ Generate First Kisan Coupon
+                        ⚡ Seed 16 Standard Kisan Coupons
                       </button>
                     </div>
                   )}

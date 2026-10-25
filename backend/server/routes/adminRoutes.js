@@ -299,8 +299,51 @@ router.put('/about', async (req, res) => {
 });
 
 /* ── Coupon Management for Admin ────────────────────────────── */
+const DEFAULT_COUPONS = [
+  { code: 'KISAN10', discountPercent: 10, minCartAmount: 0, days: 60, description: 'All Farmers Special Welcome Gift', targetType: 'all' },
+  { code: 'GROWER15', discountPercent: 15, minCartAmount: 499, days: 45, description: 'Certified Seeds & Bio-Nutrition Pack', targetType: 'all' },
+  { code: 'AGRI20', discountPercent: 20, minCartAmount: 999, days: 30, description: 'Seasonal Agriculture Bulk Discount', targetType: 'all' },
+  { code: 'DHARTI25', discountPercent: 25, minCartAmount: 1499, days: 30, description: 'Soil Health & Organic Booster Deal', targetType: 'all' },
+  { code: 'HARVEST30', discountPercent: 30, minCartAmount: 1999, days: 30, description: 'Harvest Season Mega Order Savings', targetType: 'all' },
+  { code: 'SEEDS10', discountPercent: 10, minCartAmount: 299, days: 60, description: 'Lab-Tested Hybrid Seeds Discount', targetType: 'all' },
+  { code: 'MONSOON20', discountPercent: 20, minCartAmount: 799, days: 45, description: 'Monsoon Sowing Field Ready Offer', targetType: 'all' },
+  { code: 'FERT15', discountPercent: 15, minCartAmount: 599, days: 45, description: 'Eco-Friendly Plant Food & Fertilizers', targetType: 'all' },
+  { code: 'BIO25', discountPercent: 25, minCartAmount: 1299, days: 30, description: 'Bio-Pesticides & Natural Crop Protection', targetType: 'all' },
+  { code: 'RABI20', discountPercent: 20, minCartAmount: 899, days: 60, description: 'Rabi Crop Planting Exclusive Code', targetType: 'all' },
+  { code: 'KHARIF15', discountPercent: 15, minCartAmount: 699, days: 60, description: 'Kharif Harvest Quality Protection Promo', targetType: 'all' },
+  { code: 'TOOLSFARM10', discountPercent: 10, minCartAmount: 450, days: 45, description: 'Durable Farm Tools & Equipment Saver', targetType: 'all' },
+  { code: 'SMARTFARM20', discountPercent: 20, minCartAmount: 999, days: 30, description: 'Drip & Smart Water Conserving Tools', targetType: 'all' },
+  { code: 'VIPFARM25', discountPercent: 25, minCartAmount: 1500, days: 45, description: 'Loyal Field Grower VIP Reward', targetType: 'all' },
+  { code: 'FUSION35', discountPercent: 35, minCartAmount: 2499, days: 30, description: 'FarmFusion Elite Community Promo', targetType: 'all' },
+  { code: 'SPECIAL50', discountPercent: 50, minCartAmount: 3999, days: 15, description: 'Annual Grand Kisan Bumper Offer', targetType: 'all' },
+];
+
+const seedDefaultCoupons = async () => {
+  for (const c of DEFAULT_COUPONS) {
+    const exists = await Coupon.findOne({ code: c.code });
+    if (!exists) {
+      const exp = new Date();
+      exp.setDate(exp.getDate() + c.days);
+      await Coupon.create({
+        code: c.code,
+        discountPercent: c.discountPercent,
+        minCartAmount: c.minCartAmount,
+        expiresAt: exp,
+        description: c.description,
+        targetType: c.targetType || 'all',
+        allowedEmail: '',
+        isActive: true,
+      });
+    }
+  }
+};
+
 router.get('/coupons', async (req, res) => {
   try {
+    const count = await Coupon.countDocuments();
+    if (count < 10) {
+      await seedDefaultCoupons();
+    }
     const coupons = await Coupon.find().sort({ createdAt: -1 });
     res.json(coupons);
   } catch (error) {
@@ -308,9 +351,19 @@ router.get('/coupons', async (req, res) => {
   }
 });
 
+router.post('/coupons/seed', async (req, res) => {
+  try {
+    await seedDefaultCoupons();
+    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    res.json({ message: 'Default standard coupons verified/created successfully', count: coupons.length, coupons });
+  } catch (error) {
+    res.status(500).json({ message: 'Could not seed default coupons', error: error.message });
+  }
+});
+
 router.post('/coupons', async (req, res) => {
   try {
-    const { code, discountPercent, minCartAmount, expiresAt, description, allowedEmail } = req.body;
+    const { code, discountPercent, minCartAmount, expiresAt, description, targetType, allowedEmail, assignedUserName } = req.body;
     if (!code || !discountPercent || !expiresAt) {
       return res.status(400).json({ message: 'Code, discount percentage, and expiry date are required.' });
     }
@@ -321,19 +374,40 @@ router.post('/coupons', async (req, res) => {
       return res.status(409).json({ message: `Coupon '${trimmedCode}' already exists.` });
     }
 
+    const isTargetSelected = targetType === 'selected';
+
     const coupon = await Coupon.create({
       code: trimmedCode,
       discountPercent: Number(discountPercent),
       minCartAmount: Number(minCartAmount || 0),
       expiresAt: new Date(expiresAt),
       description: description?.trim() || '',
-      allowedEmail: allowedEmail?.trim()?.toLowerCase() || '',
+      targetType: isTargetSelected ? 'selected' : 'all',
+      allowedEmail: isTargetSelected && allowedEmail ? allowedEmail.trim().toLowerCase() : '',
+      assignedUserName: isTargetSelected && assignedUserName ? assignedUserName.trim() : '',
       isActive: true,
     });
 
     res.status(201).json(coupon);
   } catch (error) {
     res.status(500).json({ message: 'Could not create coupon', error: error.message });
+  }
+});
+
+router.patch('/coupons/:id/assign', async (req, res) => {
+  try {
+    const { targetType, allowedEmail, assignedUserName } = req.body;
+    const coupon = await Coupon.findById(req.params.id);
+    if (!coupon) return res.status(404).json({ message: 'Coupon not found' });
+
+    coupon.targetType = targetType === 'selected' ? 'selected' : 'all';
+    coupon.allowedEmail = coupon.targetType === 'selected' && allowedEmail ? allowedEmail.trim().toLowerCase() : '';
+    coupon.assignedUserName = coupon.targetType === 'selected' && assignedUserName ? assignedUserName.trim() : '';
+
+    await coupon.save();
+    res.json(coupon);
+  } catch (error) {
+    res.status(500).json({ message: 'Could not assign coupon', error: error.message });
   }
 });
 
@@ -359,6 +433,8 @@ router.post('/coupons/auto', async (req, res) => {
       minCartAmount: randomDiscount >= 20 ? 499 : 0,
       expiresAt: expiryDate,
       description: `Auto-generated ${randomDiscount}% seasonal grower promo`,
+      targetType: 'all',
+      allowedEmail: '',
       isActive: true,
     });
 

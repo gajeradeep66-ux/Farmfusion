@@ -121,14 +121,14 @@ export default function Navbar() {
               {dropOpen && (
                 <div className="user-dropdown" role="menu">
                   {/* Profile card */}
-                  <div className="udrop-profile">
+                  <Link to="/profile" className="udrop-profile" onClick={() => setDropOpen(false)} style={{ textDecoration: 'none' }}>
                     <Avatar name={user.name} size={46} />
                     <div className="udrop-profile-info">
                       <strong>{user.name}</strong>
                       <span>{user.email}</span>
-                      {user.role === 'admin' && <span className="udrop-role-badge">Admin</span>}
+                      {user.role === 'admin' ? <span className="udrop-role-badge">Admin</span> : <span style={{ fontSize: '10px', color: 'var(--c-green2)', fontWeight: '700' }}>View Profile & Coupons →</span>}
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Stats strip */}
                   <div className="udrop-stats">
@@ -147,6 +147,10 @@ export default function Navbar() {
 
                   {/* Links */}
                   <nav className="udrop-links" aria-label="Account links">
+                    <Link to="/profile" className="udrop-link" onClick={() => setDropOpen(false)}>
+                      <span className="udrop-link-icon">👤</span>
+                      <span>My Profile & Coupons</span>
+                    </Link>
                     {user.role !== 'admin' && (
                       <Link to="/orders" className="udrop-link" onClick={() => setDropOpen(false)}>
                         <span className="udrop-link-icon">📦</span>

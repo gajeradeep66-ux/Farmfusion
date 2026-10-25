@@ -139,12 +139,37 @@ export default function CartPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user?.name && !shipping.name) {
+    if (user) {
       setShipping((prev) => ({
         ...prev,
-        name: user.name,
+        name: user.name || prev.name,
         email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+        address: user.address || prev.address,
+        city: user.city || prev.city,
+        state: user.state || prev.state,
+        postalCode: user.postalCode || prev.postalCode,
       }));
+    }
+
+    const autoCoupon = sessionStorage.getItem('farmfusion_auto_coupon');
+    if (autoCoupon) {
+      sessionStorage.removeItem('farmfusion_auto_coupon');
+      setCouponInput(autoCoupon);
+      api.post('/coupons/validate', {
+        code: autoCoupon.trim().toUpperCase(),
+        cartTotal: totalAmount,
+        userEmail: user?.email,
+      }).then(({ data }) => {
+        if (data.valid) {
+          setAppliedCoupon({
+            code: data.coupon.code,
+            percent: data.coupon.discountPercent,
+            label: `${data.coupon.discountPercent}% OFF ${data.coupon.description || 'Admin Special Promo'}`,
+          });
+          setCouponMessage(`✓ Coupon ${data.coupon.code} applied! (${data.coupon.discountPercent}% discount)`);
+        }
+      }).catch(() => {});
     }
   }, [user]);
 

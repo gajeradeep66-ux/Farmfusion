@@ -49,8 +49,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateProfile = async (payload) => {
+    const { data } = await api.put('/auth/profile', payload);
+    if (data.user) {
+      setUser((prev) => ({ ...prev, ...data.user }));
+    }
+    return data;
+  };
+
   const value = useMemo(
-    () => ({ user, loading, setUser, login, register, logout, loadUser }),
+    () => ({ user, loading, setUser, login, register, logout, loadUser, updateProfile }),
     [user, loading]
   );
 

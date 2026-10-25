@@ -111,4 +111,61 @@ router.get('/me', async (req, res) => {
   }
 });
 
+/* ── Update user profile ────────────────────────────────────── */
+router.put('/profile', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Not logged in' });
+  }
+
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'This account is disabled.' });
+    }
+
+    const { name, phone, address, city, state, postalCode, currentPassword, newPassword } = req.body;
+
+    if (name?.trim()) user.name = name.trim();
+    if (phone !== undefined) user.phone = phone.trim();
+    if (address !== undefined) user.address = address.trim();
+    if (city !== undefined) user.city = city.trim();
+    if (state !== undefined) user.state = state.trim();
+    if (postalCode !== undefined) user.postalCode = postalCode.trim();
+
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: 'Current password is required to change password' });
+      }
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Current password is incorrect' });
+      }
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: 'New password must have at least 8 characters' });
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    await user.save();
+
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res.json({
+      message: 'Profile updated successfully!',
+      user: userObj,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Could not update profile', error: error.message });
+  }
+});
+
 export default router;
