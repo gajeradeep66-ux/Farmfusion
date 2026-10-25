@@ -4,7 +4,6 @@ Online agricultural marketplace for seeds, farming tools, and crop care essentia
 
 ## 🌐 Live Website & Production URL
 - **Live Application**: [https://farmfusion-api.onrender.com](https://farmfusion-api.onrender.com)
-- **API Health Check**: [https://farmfusion-api.onrender.com/api/health](https://farmfusion-api.onrender.com/api/health)
 
 ## 📁 Project Structure
 
@@ -70,9 +69,6 @@ git push origin main
 ## 🔑 Access & Admin Login
 
 - **Direct Website URL**: `https://farmfusion-api.onrender.com`
-- **API Health Check**: `https://farmfusion-api.onrender.com/api/health`
 - **Admin Email**: `admin@farmfusion.com`
 - **Admin Password**: Your configured `ADMIN_PASSWORD`
 - **Admin Dashboard**: Sign in at `/login`, then visit `/admin`
-
-> **Note**: Free tier backends sleep after 15 min of inactivity and take ~40s to wake up on the first request.
