@@ -5,6 +5,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { usePreferences } from '../context/PreferencesContext';
 import { toast } from './Toast';
 import { resolveImageUrl } from '../api';
+import { getProductPricing } from '../utils/pricing';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
@@ -22,9 +23,8 @@ export default function ProductCard({ product }) {
     return { score, reviews };
   }, [product._id]);
 
-  // MRP and savings calculation for genuine eCommerce appeal
-  const originalPrice = Math.round(Number(product.price) * 1.25);
-  const discountPercent = Math.round(((originalPrice - product.price) / originalPrice) * 100);
+  // MRP and discount between 5% and 30%
+  const pricing = useMemo(() => getProductPricing(product), [product]);
 
   const handleAdd = () => {
     if (product.stock < 1) return;
@@ -70,10 +70,10 @@ export default function ProductCard({ product }) {
         <div className="product-pricing">
           <div className="price-stack">
             <span className="product-price">₹{Number(product.price).toLocaleString('en-IN')}</span>
-            <span className="product-mrp">₹{originalPrice.toLocaleString('en-IN')}</span>
+            <span className="product-mrp">₹{pricing.mrp.toLocaleString('en-IN')}</span>
           </div>
-          {discountPercent > 0 && (
-            <span className="product-discount-tag">-{discountPercent}%</span>
+          {pricing.discountPercent > 0 && (
+            <span className="product-discount-tag">-{pricing.discountPercent}%</span>
           )}
         </div>
 

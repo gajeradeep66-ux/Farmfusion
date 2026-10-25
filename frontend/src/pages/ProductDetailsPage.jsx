@@ -6,6 +6,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { usePreferences } from '../context/PreferencesContext';
 import { toast } from '../components/Toast';
 import ProductCard from '../components/ProductCard';
+import { getProductPricing } from '../utils/pricing';
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
@@ -53,8 +54,9 @@ export default function ProductDetailsPage() {
   const numId = (product._id || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   const rating = (4.6 + ((numId % 5) * 0.08)).toFixed(1);
   const reviewsCount = 42 + (numId % 140);
-  const mrp = Math.round(Number(product.price || 0) * 1.25);
-  const discountPercent = Math.round(((mrp - product.price) / mrp) * 100);
+  const pricing = getProductPricing(product);
+  const mrp = pricing.mrp;
+  const discountPercent = pricing.discountPercent;
 
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) addToCart(product);
