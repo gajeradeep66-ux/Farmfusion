@@ -79,6 +79,17 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsPath));
 
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    name: 'FarmFusion API',
+    message: 'FarmFusion Backend API is running successfully.',
+    healthCheck: '/api/health',
+    frontendUrl: process.env.FRONTEND_URL || 'https://farmfusion-web.onrender.com',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
