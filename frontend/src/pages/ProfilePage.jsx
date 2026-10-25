@@ -9,7 +9,10 @@ import './ProfilePage.css';
 
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
-  const { cartItems, totalAmount, totalItems } = useCart();
+  const cart = useCart();
+  const cartItems = Array.isArray(cart?.items) ? cart.items : (Array.isArray(cart?.cartItems) ? cart.cartItems : []);
+  const totalAmount = Number(cart?.totalAmount || 0);
+  const totalItems = Number(cart?.totalItems || 0);
   const { t, tProductName } = usePreferences();
   const navigate = useNavigate();
 
@@ -118,16 +121,21 @@ export default function ProfilePage() {
     navigate('/cart');
   };
 
-  const memberSince = user?._id
+  const memberSince = user?._id && typeof user._id === 'string' && user._id.length >= 8
     ? new Date(parseInt(user._id.substring(0, 8), 16) * 1000).toLocaleDateString('en-IN', {
         month: 'short',
         year: 'numeric',
       })
     : 'Recent Member';
 
-  const initials = user?.name
-    ? user.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
-    : 'U';
+  const initials = (user?.name || user?.email || 'U')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() || 'U';
 
   return (
     <div className="profile-page">
@@ -371,23 +379,39 @@ export default function ProfilePage() {
           ) : (
             <>
               <div className="profile-cart-list">
-                {cartItems.map((item) => (
-                  <article key={item.productId} className="profile-cart-item">
-                    <img src={resolveImageUrl(item.image)} alt={item.name} className="profile-cart-img" />
-                    <div className="profile-cart-info">
-                      <Link to={`/product/${item.productId}`} className="profile-cart-title">
-                        {tProductName(item.name)}
-                      </Link>
-                      <span className="profile-cart-price">
-                        ₹{Number(item.price).toLocaleString('en-IN')} × {item.quantity} unit{item.quantity > 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    <div className="profile-cart-subtotal">
-                      <small>TOTAL</small>
-                      <strong>₹{(item.price * item.quantity).toLocaleString('en-IN')}</strong>
-                    </div>
-                  </article>
-                ))}
+                {cartItems.map((item, index) => {
+                  const price = Number(item?.price || 0);
+                  const qty = Number(item?.quantity || 1);
+                  const lineTotal = price * qty;
+                  const pId = item?.productId || item?._id || index;
+                  const name = item?.name || 'Field Item';
+
+                  return (
+                    <article key={pId} className="profile-cart-item">
+                      <img
+                        src={resolveImageUrl(item?.image)}
+                        alt={name}
+                        className="profile-cart-img"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="%2310b981" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+                        }}
+                      />
+                      <div className="profile-cart-info">
+                        <Link to={`/product/${pId}`} className="profile-cart-title">
+                          {tProductName ? tProductName(name) : name}
+                        </Link>
+                        <span className="profile-cart-price">
+                          ₹{price.toLocaleString('en-IN')} × {qty} unit{qty > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <div className="profile-cart-subtotal">
+                        <small>TOTAL</small>
+                        <strong>₹{lineTotal.toLocaleString('en-IN')}</strong>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
 
               <div className="profile-cart-summary">
@@ -437,47 +461,70 @@ export default function ProfilePage() {
           ) : (
             <div className="profile-orders-list">
               {orders.map((order) => {
-                const dateStr = new Date(order.createdAt).toLocaleDateString('en-IN', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                });
+                const orderId = String(order?._id || '');
+                const dateStr = order?.createdAt
+                  ? new Date(order.createdAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })
+                  : 'Recent';
+
+                const orderItems = Array.isArray(order?.items) ? order.items : [];
+                const shippingAddress = order?.shippingAddress || {};
+                const orderTotal = Number(order?.total || 0);
 
                 return (
                   <div key={order._id} className="profile-order-card">
                     <div className="profile-order-card-header">
                       <div>
-                        <strong className="profile-order-id">Order #{order._id.slice(-8).toUpperCase()}</strong>
+                        <strong className="profile-order-id">
+                          Order #{orderId.length > 8 ? orderId.slice(-8).toUpperCase() : orderId.toUpperCase() || 'ORDER'}
+                        </strong>
                         <span className="profile-order-date">Placed on {dateStr}</span>
                       </div>
-                      <span className={`profile-status-pill status-${(order.status || 'Processing').toLowerCase().replace(/\s+/g, '-')}`}>
-                        {order.status || 'Processing'}
+                      <span className={`profile-status-pill status-${(order?.status || 'Processing').toLowerCase().replace(/\s+/g, '-')}`}>
+                        {order?.status || 'Processing'}
                       </span>
                     </div>
 
                     <div className="profile-order-items">
-                      {order.items?.map((it, idx) => (
-                        <div key={idx} className="profile-order-row">
-                          <img src={resolveImageUrl(it.image)} alt={it.name} className="profile-order-thumb" />
-                          <div className="profile-order-meta">
-                            <strong>{it.name}</strong>
-                            <small>Qty: {it.quantity} • ₹{Number(it.price).toLocaleString('en-IN')} each</small>
+                      {orderItems.map((it, idx) => {
+                        const itPrice = Number(it?.price || 0);
+                        const itQty = Number(it?.quantity || 1);
+                        return (
+                          <div key={it?.productId || it?._id || idx} className="profile-order-row">
+                            <img
+                              src={resolveImageUrl(it?.image)}
+                              alt={it?.name || 'Item'}
+                              className="profile-order-thumb"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="%2310b981" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+                              }}
+                            />
+                            <div className="profile-order-meta">
+                              <strong>{it?.name || 'Field Item'}</strong>
+                              <small>Qty: {itQty} • ₹{itPrice.toLocaleString('en-IN')} each</small>
+                            </div>
+                            <span className="profile-order-item-total">
+                              ₹{(itPrice * itQty).toLocaleString('en-IN')}
+                            </span>
                           </div>
-                          <span className="profile-order-item-total">
-                            ₹{(Number(it.price) * it.quantity).toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <div className="profile-order-card-footer">
                       <div>
                         <small>DELIVERED TO:</small>
-                        <span>{order.shippingAddress?.address}, {order.shippingAddress?.city} ({order.shippingAddress?.postalCode})</span>
+                        <span>
+                          {[shippingAddress.address, shippingAddress.city, shippingAddress.postalCode].filter(Boolean).join(', ') || 'Rural address on file'}
+                        </span>
                       </div>
                       <div className="profile-order-total-block">
                         <small>TOTAL PAID:</small>
-                        <strong>₹{Number(order.total || 0).toLocaleString('en-IN')}</strong>
+                        <strong>₹{orderTotal.toLocaleString('en-IN')}</strong>
                       </div>
                     </div>
                   </div>
@@ -511,11 +558,13 @@ export default function ProfilePage() {
           ) : (
             <div className="profile-coupons-grid">
               {coupons.map((c) => {
-                const expDate = new Date(c.expiresAt).toLocaleDateString('en-IN', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                });
+                const expDate = c?.expiresAt
+                  ? new Date(c.expiresAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })
+                  : 'Ongoing';
 
                 return (
                   <div key={c._id} className="profile-coupon-card">

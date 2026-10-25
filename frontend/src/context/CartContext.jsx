@@ -85,11 +85,11 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = () => setItems([]);
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalItems = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  const totalAmount = items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0);
 
   const value = useMemo(
-    () => ({ items, addToCart, updateQuantity, removeFromCart, clearCart, totalItems, totalAmount }),
+    () => ({ items, cartItems: items, addToCart, updateQuantity, removeFromCart, clearCart, totalItems, totalAmount }),
     [items, totalItems, totalAmount]
   );
 
