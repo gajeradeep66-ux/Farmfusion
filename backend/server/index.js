@@ -80,6 +80,14 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsPath));
 
+app.get(['/api/health', '/healthz'], (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'FarmFusion API is running',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
@@ -122,49 +130,40 @@ if (frontendDistPath) {
 }
 
 const ensureDefaultData = async () => {
-  for (const seed of seedProducts) {
-    await Product.updateOne(
-      { slug: seed.slug },
-      { $setOnInsert: seed },
-      { upsert: true, runValidators: true }
-    );
-  }
-
-  const products = await Product.find({});
-  for (const product of products) {
-    const staleImage = !product.image ||
-      product.image.startsWith('data:image/svg+xml') ||
-      product.image.startsWith('/images/');
-    if (staleImage) {
-      product.image = createProductImage(product.name, product.category);
-      await product.save();
+  try {
+    const productCount = await Product.estimatedDocumentCount();
+    if (productCount === 0) {
+      console.log('Seeding initial products into MongoDB...');
+      await Product.insertMany(seedProducts);
+      console.log(`✓ Seeded ${seedProducts.length} default products`);
     }
-  }
 
-  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@farmfusion.com').toLowerCase();
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin%4545';
-  const bcrypt = (await import('bcryptjs')).default;
-  const existingAdmin = await User.findOne({ email: adminEmail });
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@farmfusion.com').toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin%4545';
+    const bcrypt = (await import('bcryptjs')).default;
+    const existingAdmin = await User.findOne({ email: adminEmail });
 
-  if (!existingAdmin) {
-    await User.create({
-      name: 'FarmFusion Admin',
-      email: adminEmail,
-      password: await bcrypt.hash(adminPassword, 10),
-      role: 'admin',
-      isActive: true,
-    });
-    console.log(`Default admin user created (${adminEmail})`);
-  } else if (process.env.ADMIN_PASSWORD) {
-    // Keep admin password synchronized with environment variable if configured
-    const matches = await bcrypt.compare(adminPassword, existingAdmin.password);
-    if (!matches) {
-      existingAdmin.password = await bcrypt.hash(adminPassword, 10);
-      existingAdmin.role = 'admin';
-      existingAdmin.isActive = true;
-      await existingAdmin.save();
-      console.log(`Admin password synchronized with ADMIN_PASSWORD for ${adminEmail}`);
+    if (!existingAdmin) {
+      await User.create({
+        name: 'FarmFusion Admin',
+        email: adminEmail,
+        password: await bcrypt.hash(adminPassword, 10),
+        role: 'admin',
+        isActive: true,
+      });
+      console.log(`Default admin user created (${adminEmail})`);
+    } else if (process.env.ADMIN_PASSWORD) {
+      const matches = await bcrypt.compare(adminPassword, existingAdmin.password);
+      if (!matches) {
+        existingAdmin.password = await bcrypt.hash(adminPassword, 10);
+        existingAdmin.role = 'admin';
+        existingAdmin.isActive = true;
+        await existingAdmin.save();
+        console.log(`Admin password synchronized with ADMIN_PASSWORD for ${adminEmail}`);
+      }
     }
+  } catch (seedError) {
+    console.warn('Non-fatal seed warning:', seedError.message);
   }
 };
 
