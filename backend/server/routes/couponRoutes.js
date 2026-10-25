@@ -3,41 +3,29 @@ import Coupon from '../models/Coupon.js';
 
 const router = express.Router();
 
-/* ── Get public active coupons for store users ──────────────── */
-router.get('/active', async (req, res) => {
-  try {
-    const now = new Date();
-    const coupons = await Coupon.find({
-      isActive: true,
-      expiresAt: { $gt: now },
-    })
-      .select('code discountPercent minCartAmount expiresAt description')
-      .sort({ discountPercent: -1 })
-      .limit(10);
-
-    res.json(coupons);
-  } catch (error) {
-    res.status(500).json({ message: 'Could not fetch active coupons', error: error.message });
-  }
+/* ── Public active coupons disabled — coupons must be provided by Admin ── */
+router.get('/active', (req, res) => {
+  // Coupons are private and given by Admin to users directly
+  res.json([]);
 });
 
 /* ── Validate coupon code in cart ───────────────────────────── */
 router.post('/validate', async (req, res) => {
   try {
-    const { code, cartTotal } = req.body;
+    const { code, cartTotal, userEmail } = req.body;
     if (!code || typeof code !== 'string') {
-      return res.status(400).json({ valid: false, message: 'Please provide a coupon code' });
+      return res.status(400).json({ valid: false, message: 'Please enter a coupon code provided by Admin' });
     }
 
     const trimmedCode = code.trim().toUpperCase();
     const coupon = await Coupon.findOne({ code: trimmedCode });
 
     if (!coupon) {
-      return res.status(404).json({ valid: false, message: `Coupon '${trimmedCode}' is invalid` });
+      return res.status(404).json({ valid: false, message: `Coupon '${trimmedCode}' is invalid. Contact Admin to get a valid promo code.` });
     }
 
     if (!coupon.isActive) {
-      return res.status(400).json({ valid: false, message: `Coupon '${trimmedCode}' has been disabled` });
+      return res.status(400).json({ valid: false, message: `Coupon '${trimmedCode}' is inactive or has been revoked.` });
     }
 
     const now = new Date();
@@ -54,11 +42,24 @@ router.post('/validate', async (req, res) => {
       });
     }
 
+    // Check if coupon is restricted to a specific grower/user email
+    if (coupon.allowedEmail && coupon.allowedEmail.trim() !== '') {
+      const normalizedAllowed = coupon.allowedEmail.trim().toLowerCase();
+      const normalizedUser = userEmail ? String(userEmail).trim().toLowerCase() : '';
+
+      if (!normalizedUser || normalizedUser !== normalizedAllowed) {
+        return res.status(403).json({
+          valid: false,
+          message: `This coupon was issued exclusively for ${coupon.allowedEmail}. Please log in with that account.`,
+        });
+      }
+    }
+
     const total = Number(cartTotal || 0);
     if (coupon.minCartAmount > 0 && total < coupon.minCartAmount) {
       return res.status(400).json({
         valid: false,
-        message: `Minimum cart amount of ₹${coupon.minCartAmount} required for '${trimmedCode}'`,
+        message: `Minimum order amount of ₹${coupon.minCartAmount} required for coupon '${trimmedCode}'`,
       });
     }
 
@@ -72,6 +73,7 @@ router.post('/validate', async (req, res) => {
         description: coupon.description,
         discountAmount,
         minCartAmount: coupon.minCartAmount,
+        allowedEmail: coupon.allowedEmail || null,
       },
     });
   } catch (error) {

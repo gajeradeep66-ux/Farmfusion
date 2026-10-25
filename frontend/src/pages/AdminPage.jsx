@@ -60,7 +60,7 @@ export default function AdminPage() {
   const [busyUser, setBusyUser] = useState('');
   const [busyOrder, setBusyOrder] = useState('');
   const [coupons, setCoupons] = useState([]);
-  const [couponForm, setCouponForm] = useState({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '' });
+  const [couponForm, setCouponForm] = useState({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '', allowedEmail: '' });
   const [busyCoupon, setBusyCoupon] = useState('');
   const productFileRef = useRef(null);
   const aboutFileRef = useRef(null);
@@ -222,6 +222,14 @@ export default function AdminPage() {
     }
   };
 
+  const handleCopyCouponCode = (code) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code);
+    }
+    setMessage(`📋 Coupon code '${code}' copied! Share this directly with your user.`);
+    setTimeout(() => setMessage(''), 4500);
+  };
+
   const handleCreateCoupon = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -234,10 +242,11 @@ export default function AdminPage() {
         minCartAmount: Number(couponForm.minCartAmount || 0),
         expiresAt: couponForm.expiresAt ? new Date(couponForm.expiresAt).toISOString() : new Date(Date.now() + 14 * 86400000).toISOString(),
         description: couponForm.description,
+        allowedEmail: couponForm.allowedEmail?.trim()?.toLowerCase() || '',
       };
       const { data } = await api.post('/admin/coupons', payload);
       setCoupons((prev) => [data, ...prev]);
-      setCouponForm({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '' });
+      setCouponForm({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '', allowedEmail: '' });
       setMessage(`✓ Coupon ${data.code} (${data.discountPercent}% OFF) created successfully!`);
     } catch (err) {
       setError(err.response?.data?.message || 'Could not create coupon.');
@@ -612,6 +621,20 @@ export default function AdminPage() {
                 </label>
 
                 <label className="admin-label">
+                  Assign to Specific Customer Email (Optional)
+                  <input
+                    type="email"
+                    placeholder="e.g. grower@example.com (Leave blank for any user given the code)"
+                    value={couponForm.allowedEmail || ''}
+                    onChange={(e) => setCouponForm({ ...couponForm, allowedEmail: e.target.value })}
+                    className="admin-field mt-1"
+                  />
+                  <small style={{ fontSize: '10px', color: 'var(--c-text3)', marginTop: '2px', display: 'block' }}>
+                    🔒 Leave empty to let any customer with this code use it. If email is provided, ONLY that specific customer can use it.
+                  </small>
+                </label>
+
+                <label className="admin-label">
                   Description / Offer Note
                   <input
                     placeholder="e.g. 15% off for all Rabi season certified seeds"
@@ -643,8 +666,9 @@ export default function AdminPage() {
                   <table className="admin-table">
                     <thead>
                       <tr>
-                        <th>Code</th>
+                        <th>Code & Share</th>
                         <th>Discount</th>
+                        <th>Assigned Customer</th>
                         <th>Min Spend</th>
                         <th>Status & Expiry</th>
                         <th>Actions</th>
@@ -662,15 +686,45 @@ export default function AdminPage() {
                         return (
                           <tr key={c._id}>
                             <td>
-                              <strong style={{ fontFamily: 'monospace', fontSize: '13px', background: 'var(--c-surface2)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--c-border)' }}>
-                                {c.code}
-                              </strong>
-                              {c.description && <span style={{ display: 'block', fontSize: '11px', color: 'var(--c-text3)', marginTop: '2px' }}>{c.description}</span>}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <strong style={{ fontFamily: 'monospace', fontSize: '13px', background: 'var(--c-surface2)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--c-border)' }}>
+                                  {c.code}
+                                </strong>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyCouponCode(c.code)}
+                                  title="Copy coupon code to give to user"
+                                  style={{
+                                    padding: '2px 7px',
+                                    borderRadius: '5px',
+                                    border: '1px solid var(--c-border)',
+                                    background: 'var(--c-surface2)',
+                                    color: 'var(--c-green2)',
+                                    fontSize: '11px',
+                                    fontWeight: '750',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  📋 Copy
+                                </button>
+                              </div>
+                              {c.description && <span style={{ display: 'block', fontSize: '11px', color: 'var(--c-text3)', marginTop: '3px' }}>{c.description}</span>}
                             </td>
                             <td>
                               <span style={{ fontWeight: '800', color: 'var(--c-badge-text)', background: 'var(--c-badge-bg)', border: '1px solid var(--c-badge-border)', padding: '3px 8px', borderRadius: '6px', fontSize: '12px' }}>
                                 {c.discountPercent}% OFF
                               </span>
+                            </td>
+                            <td>
+                              {c.allowedEmail ? (
+                                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--c-green2)' }}>
+                                  👤 {c.allowedEmail}
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '11px', color: 'var(--c-text3)' }}>
+                                  Any user with code
+                                </span>
+                              )}
                             </td>
                             <td>{c.minCartAmount > 0 ? `₹${c.minCartAmount}` : 'None'}</td>
                             <td>

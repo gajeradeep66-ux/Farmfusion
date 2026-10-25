@@ -310,7 +310,7 @@ router.get('/coupons', async (req, res) => {
 
 router.post('/coupons', async (req, res) => {
   try {
-    const { code, discountPercent, minCartAmount, expiresAt, description } = req.body;
+    const { code, discountPercent, minCartAmount, expiresAt, description, allowedEmail } = req.body;
     if (!code || !discountPercent || !expiresAt) {
       return res.status(400).json({ message: 'Code, discount percentage, and expiry date are required.' });
     }
@@ -327,6 +327,7 @@ router.post('/coupons', async (req, res) => {
       minCartAmount: Number(minCartAmount || 0),
       expiresAt: new Date(expiresAt),
       description: description?.trim() || '',
+      allowedEmail: allowedEmail?.trim()?.toLowerCase() || '',
       isActive: true,
     });
 

@@ -32,6 +32,12 @@ const couponSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    allowedEmail: {
+      type: String,
+      default: '',
+      trim: true,
+      lowercase: true,
+    },
     timesUsed: {
       type: Number,
       default: 0,
