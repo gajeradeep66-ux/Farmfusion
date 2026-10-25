@@ -1,12 +1,12 @@
 # FarmFusion 🌱
 
-Online agricultural marketplace for seeds, tools, and crop care essentials.
+Online agricultural marketplace for seeds, farming tools, and crop care essentials.
 
 ## 📁 Project Structure
 
 - `frontend/` - React 19 + Vite + Tailwind CSS
-- `backend/` - Node.js + Express + MongoDB REST API
-- `render.yaml` - Blueprint for 1-click Render deployment
+- `backend/` - Node.js + Express + MongoDB REST API (serves UI & API)
+- `render.yaml` - 1-Click Unified Full-Stack Blueprint for Render
 
 ## 💻 Run Locally
 
@@ -40,7 +40,7 @@ npm run dev --prefix frontend
 - Website: `http://localhost:5173`
 - API Health: `http://localhost:7854/api/health`
 
-## 🚀 Deploy to Render
+## 🚀 1-Click Deploy to Render (Blueprint)
 
 ### Step 1: MongoDB Network Access
 In [MongoDB Atlas](https://cloud.mongodb.com/) > **Network Access** > **IP Access List**:
@@ -49,7 +49,7 @@ In [MongoDB Atlas](https://cloud.mongodb.com/) > **Network Access** > **IP Acces
 ### Step 2: Push to GitHub
 ```bash
 git add .
-git commit -m "Deploy FarmFusion to Render"
+git commit -m "Deploy to Render"
 git push origin main
 ```
 
@@ -57,17 +57,16 @@ git push origin main
 1. Go to [Render Dashboard](https://dashboard.render.com/) > **New +** > **Blueprint**.
 2. Connect your GitHub repository (`Farmfusion`).
 3. Render automatically provisions:
-   - **`farmfusion-api`** (Backend Web Service)
-   - **`farmfusion-web`** (Frontend Static Site)
-4. Fill in the prompted variables:
+   - **`farmfusion-api`** (Unified Web Service serving both UI and API)
+4. Enter the prompted variables:
    - `MONGO_URI`: Your MongoDB connection string
    - `ADMIN_PASSWORD`: Your admin password
 5. Click **Apply**.
 
 ## 🔑 Access & Admin Login
 
-- **Website**: `https://farmfusion-web.onrender.com`
-- **API Status**: `https://farmfusion-api.onrender.com/api/health`
+- **Direct Website URL**: `https://farmfusion-api.onrender.com`
+- **API Health Check**: `https://farmfusion-api.onrender.com/api/health`
 - **Admin Email**: `admin@farmfusion.com`
 - **Admin Password**: Your configured `ADMIN_PASSWORD`
 - **Admin Dashboard**: Sign in at `/login`, then visit `/admin`
