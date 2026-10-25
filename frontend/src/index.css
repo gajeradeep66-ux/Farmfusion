@@ -2219,6 +2219,15 @@ html[data-theme='dark'] .store-header {
   --c-shadow: rgba(15, 23, 42, 0.06);
   --c-shadow2: rgba(15, 23, 42, 0.12);
   --c-glow: rgba(16, 185, 129, 0.22);
+  --c-badge-bg: #ecfdf5;
+  --c-badge-text: #059669;
+  --c-badge-border: rgba(16, 185, 129, 0.25);
+  --c-badge-danger-bg: #fef2f2;
+  --c-badge-danger-text: #b91c1c;
+  --c-badge-danger-border: rgba(239, 68, 68, 0.25);
+  --c-badge-neutral-bg: #f1f5f9;
+  --c-badge-neutral-text: #64748b;
+  --c-badge-neutral-border: rgba(100, 116, 139, 0.2);
   --radius: 16px;
   --radius-sm: 10px;
   --radius-lg: 24px;
@@ -2246,6 +2255,15 @@ html[data-theme='dark'] {
   --c-shadow: rgba(0, 0, 0, 0.4);
   --c-shadow2: rgba(0, 0, 0, 0.65);
   --c-glow: rgba(52, 211, 153, 0.25);
+  --c-badge-bg: rgba(16, 185, 129, 0.16);
+  --c-badge-text: #34d399;
+  --c-badge-border: rgba(52, 211, 153, 0.35);
+  --c-badge-danger-bg: rgba(239, 68, 68, 0.18);
+  --c-badge-danger-text: #f87171;
+  --c-badge-danger-border: rgba(248, 113, 113, 0.35);
+  --c-badge-neutral-bg: rgba(148, 163, 184, 0.14);
+  --c-badge-neutral-text: #94a3b8;
+  --c-badge-neutral-border: rgba(148, 163, 184, 0.25);
 }
 
 body {
@@ -4002,37 +4020,309 @@ html[data-theme='dark'] .checkout-field select {
 }
 
 html[data-theme='dark'] .header-topline {
-  background: #1d4933;
-  color: #eaf7ed;
+  background: #08170e;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.15);
+  color: #d1fae5;
 }
 
+html[data-theme='dark'] .store-header {
+  background: rgba(8, 16, 11, 0.88) !important;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.16) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* Primary buttons with lush glowing emerald in Dark Mode */
 html[data-theme='dark'] .store-search button,
-html[data-theme='dark'] .cart-action,
 html[data-theme='dark'] .btn-primary,
 html[data-theme='dark'] .button-primary,
 html[data-theme='dark'] .product-add:not(:disabled),
-html[data-theme='dark'] .shop-cat-pill.active,
 html[data-theme='dark'] .checkout-submit,
 html[data-theme='dark'] .auth-submit,
-html[data-theme='dark'] .admin-primary-button,
-html[data-theme='dark'] .category-tile:hover .category-arrow {
-  background: #28583b;
-  color: #f5fff7;
+html[data-theme='dark'] .admin-primary-button {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45) !important;
+  border: 0 !important;
 }
 
 html[data-theme='dark'] .store-search button:hover,
-html[data-theme='dark'] .cart-action:hover,
 html[data-theme='dark'] .btn-primary:hover,
 html[data-theme='dark'] .button-primary:hover,
 html[data-theme='dark'] .product-add:not(:disabled):hover,
 html[data-theme='dark'] .checkout-submit:hover,
-html[data-theme='dark'] .auth-submit:hover {
-  background: #34734d;
-  color: #fff;
+html[data-theme='dark'] .auth-submit:hover,
+html[data-theme='dark'] .admin-primary-button:hover {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+  color: #061e12 !important;
+  box-shadow: 0 6px 24px rgba(52, 211, 153, 0.6) !important;
+  transform: translateY(-2px);
+}
+
+html[data-theme='dark'] .cart-action {
+  background: var(--c-surface) !important;
+  border: 1.5px solid var(--c-border) !important;
+  color: var(--c-text) !important;
+}
+html[data-theme='dark'] .cart-action:hover {
+  border-color: var(--c-green2) !important;
+  color: var(--c-green2) !important;
 }
 
 html[data-theme='dark'] .button-light {
-  color: #244b32;
+  background: var(--c-surface2) !important;
+  color: var(--c-green2) !important;
+  border: 1.5px solid var(--c-border) !important;
+}
+html[data-theme='dark'] .button-light:hover {
+  background: var(--c-border) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme='dark'] .shop-cat-pill.active {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Hero Section in Dark Mode */
+html[data-theme='dark'] .home-hero {
+  border-color: rgba(52, 211, 153, 0.2) !important;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(16, 185, 129, 0.2), transparent 38%),
+    radial-gradient(circle at 88% 82%, rgba(52, 211, 153, 0.12), transparent 42%),
+    linear-gradient(145deg, #091710 0%, #0d2218 60%, #112d20 100%) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65) !important;
+}
+html[data-theme='dark'] .hero-image-wrap {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+}
+html[data-theme='dark'] .hero-floating-stat {
+  background: rgba(14, 28, 20, 0.94) !important;
+  border: 1.5px solid rgba(52, 211, 153, 0.32) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Trust Pillars in Dark Mode */
+html[data-theme='dark'] .trust-pillar-card {
+  background: rgba(14, 28, 20, 0.8) !important;
+  border-color: rgba(52, 211, 153, 0.18) !important;
+}
+html[data-theme='dark'] .trust-pillar-card:hover {
+  border-color: rgba(52, 211, 153, 0.45) !important;
+  background: rgba(18, 38, 27, 0.95) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5) !important;
+}
+html[data-theme='dark'] .trust-pillar-icon {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+}
+
+/* Product Cards in Dark Mode */
+html[data-theme='dark'] .product-tile {
+  background: rgba(14, 28, 20, 0.88) !important;
+  border-color: rgba(52, 211, 153, 0.16) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+html[data-theme='dark'] .product-tile:hover {
+  border-color: rgba(52, 211, 153, 0.45) !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), 0 0 24px rgba(16, 185, 129, 0.2) !important;
+}
+html[data-theme='dark'] .product-image-wrap {
+  background: #08130d !important;
+}
+html[data-theme='dark'] .product-rating-pill {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+html[data-theme='dark'] .product-discount-tag {
+  background: rgba(16, 185, 129, 0.22) !important;
+  color: #6ee7b7 !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+}
+
+/* Categories & Promo Card in Dark Mode */
+html[data-theme='dark'] .category-tile {
+  background: rgba(14, 28, 20, 0.88) !important;
+  border-color: rgba(52, 211, 153, 0.16) !important;
+}
+html[data-theme='dark'] .category-tile:hover {
+  border-color: rgba(52, 211, 153, 0.45) !important;
+  background: rgba(18, 38, 27, 0.95) !important;
+}
+html[data-theme='dark'] .offer-card {
+  background:
+    radial-gradient(circle at 80% 20%, rgba(52, 211, 153, 0.22), transparent 45%),
+    linear-gradient(135deg, #091a12 0%, #0d281c 55%, #143a29 100%) !important;
+  border-color: rgba(52, 211, 153, 0.28) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important;
+}
+html[data-theme='dark'] .offer-stamp {
+  background: rgba(16, 29, 22, 0.88) !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+html[data-theme='dark'] .grow-points > div {
+  background: rgba(14, 28, 20, 0.85) !important;
+  border-color: rgba(52, 211, 153, 0.16) !important;
+}
+html[data-theme='dark'] .grow-points > div:hover {
+  border-color: var(--c-green2) !important;
+  background: rgba(18, 38, 27, 0.95) !important;
+}
+
+/* Footer & Language Bar in Dark Mode */
+html[data-theme='dark'] .site-footer {
+  background: #07120a !important;
+  border-top-color: rgba(52, 211, 153, 0.15) !important;
+}
+html[data-theme='dark'] .footer-language-bar {
+  background: #09160e !important;
+  border-bottom-color: rgba(52, 211, 153, 0.12) !important;
+}
+html[data-theme='dark'] .footer-lang-btn {
+  background: rgba(16, 29, 22, 0.9) !important;
+  border-color: rgba(52, 211, 153, 0.2) !important;
+  color: #cbd5e1 !important;
+}
+html[data-theme='dark'] .footer-lang-btn:hover {
+  border-color: var(--c-green) !important;
+  color: var(--c-green2) !important;
+}
+html[data-theme='dark'] .footer-lang-btn.active {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45) !important;
+}
+
+/* User Dropdown in Dark Mode */
+html[data-theme='dark'] .user-dropdown {
+  background: #0c1c14 !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7) !important;
+}
+html[data-theme='dark'] .udrop-profile {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-bottom-color: rgba(52, 211, 153, 0.15) !important;
+}
+html[data-theme='dark'] .udrop-stats {
+  background: rgba(9, 21, 14, 0.8) !important;
+  border-bottom-color: rgba(52, 211, 153, 0.15) !important;
+}
+html[data-theme='dark'] .udrop-link {
+  color: #f8fafc !important;
+}
+html[data-theme='dark'] .udrop-link:hover {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #34d399 !important;
+}
+html[data-theme='dark'] .udrop-lang-btn {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(52, 211, 153, 0.2) !important;
+  color: #f8fafc !important;
+}
+html[data-theme='dark'] .udrop-lang-btn:hover {
+  border-color: #10b981 !important;
+  color: #34d399 !important;
+}
+html[data-theme='dark'] .udrop-lang-btn.active {
+  background: #10b981 !important;
+  color: #fff !important;
+}
+
+/* Cart & Checkout in Dark Mode */
+html[data-theme='dark'] .cart-items-panel,
+html[data-theme='dark'] .checkout-panel,
+html[data-theme='dark'] .customer-order-card,
+html[data-theme='dark'] .orders-state {
+  background: rgba(14, 28, 20, 0.88) !important;
+  border-color: rgba(52, 211, 153, 0.18) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5) !important;
+}
+html[data-theme='dark'] .checkout-field input,
+html[data-theme='dark'] .checkout-field select,
+html[data-theme='dark'] .admin-field,
+html[data-theme='dark'] .admin-search {
+  background: #09150e !important;
+  border-color: rgba(52, 211, 153, 0.2) !important;
+  color: #f8fafc !important;
+}
+html[data-theme='dark'] .checkout-field input:focus,
+html[data-theme='dark'] .checkout-field select:focus,
+html[data-theme='dark'] .admin-field:focus {
+  border-color: #10b981 !important;
+  background: #0d1e14 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+html[data-theme='dark'] .pay-tile {
+  background: rgba(11, 23, 16, 0.9) !important;
+  border-color: rgba(52, 211, 153, 0.18) !important;
+}
+html[data-theme='dark'] .pay-tile--active {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25) !important;
+}
+html[data-theme='dark'] .pay-selected-pill {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+}
+html[data-theme='dark'] .order-summary-block {
+  background: rgba(9, 21, 14, 0.85) !important;
+  border-color: rgba(52, 211, 153, 0.18) !important;
+}
+
+/* Admin Dashboard in Dark Mode */
+html[data-theme='dark'] .admin-hero {
+  background:
+    radial-gradient(circle at 86% 30%, rgba(16, 185, 129, 0.25), transparent 28%),
+    linear-gradient(115deg, #091a13 0%, #0d281c 58%, #133928 100%) !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5) !important;
+}
+html[data-theme='dark'] .admin-stat-card {
+  background: rgba(14, 28, 20, 0.9) !important;
+  border-color: rgba(52, 211, 153, 0.18) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+}
+html[data-theme='dark'] .admin-tabs {
+  background: #09150e !important;
+  border-color: rgba(52, 211, 153, 0.2) !important;
+}
+html[data-theme='dark'] .admin-tabs button {
+  color: #94a3b8 !important;
+}
+html[data-theme='dark'] .admin-tabs button[aria-selected="true"] {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35) !important;
+}
+html[data-theme='dark'] .admin-panel {
+  background: rgba(14, 28, 20, 0.9) !important;
+  border-color: rgba(52, 211, 153, 0.18) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45) !important;
+}
+html[data-theme='dark'] .admin-table th {
+  background: #09150e !important;
+  color: #94a3b8 !important;
+  border-bottom-color: rgba(52, 211, 153, 0.18) !important;
+}
+html[data-theme='dark'] .admin-table td {
+  border-bottom-color: rgba(52, 211, 153, 0.1) !important;
+  color: #f8fafc !important;
+}
+html[data-theme='dark'] .admin-table tr:hover td {
+  background: rgba(16, 185, 129, 0.08) !important;
+}
+html[data-theme='dark'] .admin-product-row {
+  border-color: rgba(52, 211, 153, 0.14) !important;
+}
+html[data-theme='dark'] .admin-product-row:hover {
+  background: rgba(16, 185, 129, 0.08) !important;
 }
 
 html[data-theme='dark'] .auth-story {

@@ -668,22 +668,22 @@ export default function AdminPage() {
                               {c.description && <span style={{ display: 'block', fontSize: '11px', color: 'var(--c-text3)', marginTop: '2px' }}>{c.description}</span>}
                             </td>
                             <td>
-                              <span style={{ fontWeight: '800', color: '#059669', background: '#ecfdf5', padding: '3px 8px', borderRadius: '6px', fontSize: '12px' }}>
+                              <span style={{ fontWeight: '800', color: 'var(--c-badge-text)', background: 'var(--c-badge-bg)', border: '1px solid var(--c-badge-border)', padding: '3px 8px', borderRadius: '6px', fontSize: '12px' }}>
                                 {c.discountPercent}% OFF
                               </span>
                             </td>
                             <td>{c.minCartAmount > 0 ? `₹${c.minCartAmount}` : 'None'}</td>
                             <td>
                               {isExpired ? (
-                                <span style={{ background: '#fef2f2', color: '#b91c1c', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '750' }}>
+                                <span style={{ background: 'var(--c-badge-danger-bg)', color: 'var(--c-badge-danger-text)', border: '1px solid var(--c-badge-danger-border)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '750' }}>
                                   Expired ({expFormatted})
                                 </span>
                               ) : !c.isActive ? (
-                                <span style={{ background: '#f3f4f6', color: '#6b7280', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+                                <span style={{ background: 'var(--c-badge-neutral-bg)', color: 'var(--c-badge-neutral-text)', border: '1px solid var(--c-badge-neutral-border)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
                                   Disabled
                                 </span>
                               ) : (
-                                <span style={{ background: '#ecfdf5', color: '#047857', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+                                <span style={{ background: 'var(--c-badge-bg)', color: 'var(--c-badge-text)', border: '1px solid var(--c-badge-border)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
                                   Active (till {expFormatted})
                                 </span>
                               )}
@@ -713,9 +713,9 @@ export default function AdminPage() {
                                   style={{
                                     padding: '3px 8px',
                                     borderRadius: '5px',
-                                    border: '1px solid #fee2e2',
-                                    background: '#fef2f2',
-                                    color: '#b91c1c',
+                                    border: '1px solid var(--c-badge-danger-border)',
+                                    background: 'var(--c-badge-danger-bg)',
+                                    color: 'var(--c-badge-danger-text)',
                                     fontSize: '11px',
                                     fontWeight: '700',
                                     cursor: 'pointer',

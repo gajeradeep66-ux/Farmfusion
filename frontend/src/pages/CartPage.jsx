@@ -370,7 +370,7 @@ export default function CartPage() {
                 <Link to={`/product/${item.productId}`} className="cart-item-title">{tProductName(item.name)}</Link>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <span className="cart-unit-price">₹{Number(item.price).toLocaleString('en-IN')} each</span>
-                  <span style={{ fontSize: '11px', color: '#059669', background: '#ecfdf5', padding: '1px 6px', borderRadius: '4px', fontWeight: '700' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--c-badge-text)', background: 'var(--c-badge-bg)', border: '1px solid var(--c-badge-border)', padding: '1px 6px', borderRadius: '4px', fontWeight: '700' }}>
                     ✓ In Stock
                   </span>
                 </div>
@@ -403,13 +403,13 @@ export default function CartPage() {
           <div style={{ marginTop: '20px', padding: '16px', background: 'var(--c-surface2)', borderRadius: '14px', border: '1.5px dashed var(--c-border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
               <span style={{ fontSize: '13px', fontWeight: '750', color: 'var(--c-text)' }}>🏷️ Have a Promo / Kisan Coupon?</span>
-              <span style={{ fontSize: '11px', color: '#059669', fontWeight: '700' }}>Try: FARM10 or KISAN20</span>
+              <span style={{ fontSize: '11px', color: 'var(--c-green2)', fontWeight: '700' }}>Try: FARM10 or KISAN20</span>
             </div>
             {appliedCoupon ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ecfdf5', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--c-badge-bg)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--c-badge-border)' }}>
                 <div>
-                  <strong style={{ color: '#059669', fontSize: '13px' }}>🎉 {appliedCoupon.code} Applied</strong>
-                  <div style={{ fontSize: '12px', color: '#047857' }}>{appliedCoupon.label} (−₹{discountAmount.toLocaleString('en-IN')})</div>
+                  <strong style={{ color: 'var(--c-badge-text)', fontSize: '13px' }}>🎉 {appliedCoupon.code} Applied</strong>
+                  <div style={{ fontSize: '12px', color: 'var(--c-badge-text)' }}>{appliedCoupon.label} (−₹{discountAmount.toLocaleString('en-IN')})</div>
                 </div>
                 <button
                   type="button"
@@ -457,9 +457,9 @@ export default function CartPage() {
                       style={{
                         padding: '3px 8px',
                         borderRadius: '6px',
-                        border: '1px solid #10b981',
-                        background: '#ecfdf5',
-                        color: '#059669',
+                        border: '1px solid var(--c-badge-border)',
+                        background: 'var(--c-badge-bg)',
+                        color: 'var(--c-badge-text)',
                         fontSize: '11px',
                         fontWeight: '750',
                         cursor: 'pointer',
@@ -526,7 +526,7 @@ export default function CartPage() {
           <div className="pay-section">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <p className="pay-section-label" style={{ margin: 0 }}>{t('Choose how to pay')}</p>
-              <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#059669', padding: '2px 8px', borderRadius: '999px', fontWeight: '750', border: '1px solid rgba(16,185,129,0.3)' }}>
+              <span style={{ fontSize: '11px', background: 'var(--c-badge-bg)', color: 'var(--c-badge-text)', padding: '2px 8px', borderRadius: '999px', fontWeight: '750', border: '1px solid var(--c-badge-border)' }}>
                 ⚡ Instant Online & COD Ready
               </span>
             </div>
@@ -577,9 +577,9 @@ export default function CartPage() {
                       style={{
                         padding: '5px 12px',
                         borderRadius: '6px',
-                        border: upiApp === app.id ? '2px solid #059669' : '1px solid var(--c-border)',
-                        background: upiApp === app.id ? '#ecfdf5' : 'var(--c-surface)',
-                        color: upiApp === app.id ? '#059669' : 'var(--c-text)',
+                        border: upiApp === app.id ? '2px solid var(--c-green)' : '1px solid var(--c-border)',
+                        background: upiApp === app.id ? 'var(--c-surface2)' : 'var(--c-surface)',
+                        color: upiApp === app.id ? 'var(--c-green)' : 'var(--c-text)',
                         fontWeight: '700',
                         fontSize: '12px',
                         cursor: 'pointer',
@@ -603,7 +603,7 @@ export default function CartPage() {
               <div style={{ background: 'var(--c-surface2)', padding: '14px', borderRadius: '12px', marginTop: '10px', border: '1px solid var(--c-border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--c-text)' }}>Test Card (Instant Sandbox Ready)</span>
-                  <span style={{ fontSize: '11px', color: '#059669', fontWeight: '700' }}>✓ Auto-filled</span>
+                  <span style={{ fontSize: '11px', color: 'var(--c-green2)', fontWeight: '700' }}>✓ Auto-filled</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: '8px' }}>
                   <input
@@ -640,9 +640,9 @@ export default function CartPage() {
                       style={{
                         padding: '5px 10px',
                         borderRadius: '6px',
-                        border: selectedBank === bank.id ? '2px solid #059669' : '1px solid var(--c-border)',
-                        background: selectedBank === bank.id ? '#ecfdf5' : 'var(--c-surface)',
-                        color: selectedBank === bank.id ? '#059669' : 'var(--c-text)',
+                        border: selectedBank === bank.id ? '2px solid var(--c-green)' : '1px solid var(--c-border)',
+                        background: selectedBank === bank.id ? 'var(--c-surface2)' : 'var(--c-surface)',
+                        color: selectedBank === bank.id ? 'var(--c-green)' : 'var(--c-text)',
                         fontWeight: '700',
                         fontSize: '11px',
                         cursor: 'pointer',
@@ -667,9 +667,9 @@ export default function CartPage() {
                       style={{
                         padding: '6px 12px',
                         borderRadius: '6px',
-                        border: selectedWallet === w ? '2px solid #059669' : '1px solid var(--c-border)',
-                        background: selectedWallet === w ? '#ecfdf5' : 'var(--c-surface)',
-                        color: selectedWallet === w ? '#059669' : 'var(--c-text)',
+                        border: selectedWallet === w ? '2px solid var(--c-green)' : '1px solid var(--c-border)',
+                        background: selectedWallet === w ? 'var(--c-surface2)' : 'var(--c-surface)',
+                        color: selectedWallet === w ? 'var(--c-green)' : 'var(--c-text)',
                         fontWeight: '700',
                         fontSize: '12px',
                         cursor: 'pointer',
@@ -817,7 +817,7 @@ export default function CartPage() {
             textAlign: 'center',
             position: 'relative',
           }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ecfdf5', color: '#059669', padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: '800', marginBottom: '16px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--c-badge-bg)', color: 'var(--c-badge-text)', border: '1px solid var(--c-badge-border)', padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: '800', marginBottom: '16px' }}>
               <span>🛡️</span> Verified Secure Gateway
             </div>
 

@@ -114,7 +114,7 @@ export default function ProductDetailsPage() {
                 <span style={{ fontSize: '1.15rem', color: 'var(--c-text3)', textDecoration: 'line-through' }}>
                   ₹{mrp.toLocaleString('en-IN')}
                 </span>
-                <span style={{ background: '#ecfdf5', color: '#059669', fontWeight: '800', fontSize: '12px', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                <span style={{ background: 'var(--c-badge-bg)', color: 'var(--c-badge-text)', fontWeight: '800', fontSize: '12px', padding: '3px 8px', borderRadius: '6px', border: '1px solid var(--c-badge-border)' }}>
                   {discountPercent}% OFF
                 </span>
               </>

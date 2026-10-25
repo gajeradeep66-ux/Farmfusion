@@ -502,3 +502,44 @@ textarea.admin-field { min-height: 105px; resize: vertical; line-height: 1.6; }
   .admin-order-table th,
   .admin-order-table td { padding-right: 10px; padding-left: 10px; }
 }
+
+/* Dark theme overrides for Admin dashboard */
+html[data-theme='dark'] .admin-notice-error {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+}
+html[data-theme='dark'] .admin-notice-success {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(16, 185, 129, 0.14);
+  color: #6ee7b7;
+}
+html[data-theme='dark'] .admin-edit-indicator {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+html[data-theme='dark'] .admin-stock.is-low {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+html[data-theme='dark'] .admin-featured-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+html[data-theme='dark'] .admin-user-status.is-disabled {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+html[data-theme='dark'] .admin-product-actions button:last-child {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+html[data-theme='dark'] .admin-product-actions button:last-child:hover {
+  background: rgba(239, 68, 68, 0.14);
+}
+html[data-theme='dark'] .admin-order-status-select {
+  background: #09150e;
+  border-color: rgba(52, 211, 153, 0.2);
+  color: #f8fafc;
+}
+
