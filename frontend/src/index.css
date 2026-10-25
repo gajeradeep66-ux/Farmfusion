@@ -5109,3 +5109,259 @@ select:focus-visible {
     gap: 8px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE APP NAVIGATION & TOUCH OPTIMIZATIONS (100% MOBILE-READY)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Hidden on desktop/tablets */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Prevent horizontal wobbling/overflow on all mobile screens */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Ensure content has clearance so the bottom bar never overlaps checkout or footer */
+  body {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Prevent annoying iOS Safari/Chrome automatic page zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* ── Mobile Bottom Navigation Bar ── */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    height: calc(62px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--c-border);
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 -4px 20px rgba(17, 39, 27, 0.08);
+  }
+
+  html[data-theme='dark'] .mobile-bottom-nav {
+    background: rgba(13, 24, 18, 0.95);
+    border-top: 1px solid rgba(52, 211, 153, 0.2);
+    box-shadow: 0 -4px 22px rgba(0, 0, 0, 0.55);
+  }
+
+  .mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 6px 2px;
+    color: var(--c-text3);
+    text-decoration: none;
+    transition: all 0.18s ease;
+    user-select: none;
+  }
+
+  .mobile-nav-item:active {
+    transform: scale(0.92);
+  }
+
+  .mobile-nav-item.active {
+    color: var(--c-green2);
+  }
+
+  html[data-theme='dark'] .mobile-nav-item.active {
+    color: #34d399;
+  }
+
+  .mobile-nav-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
+  }
+
+  .mobile-nav-icon svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+  }
+
+  .mobile-nav-item.active .mobile-nav-icon svg {
+    transform: translateY(-1px) scale(1.08);
+  }
+
+  .mobile-nav-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .mobile-cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 99px;
+    background: linear-gradient(135deg, var(--c-amber) 0%, var(--c-amber2) 100%);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 6px rgba(217, 120, 67, 0.4);
+  }
+
+  .mobile-user-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--c-green) 0%, var(--c-green2) 100%);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+  }
+
+  /* ── Mobile Compact Header Layout ── */
+  .header-main {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+  }
+
+  .header-main > .brand {
+    order: 1;
+    flex-shrink: 0;
+  }
+
+  .header-main > .header-actions {
+    order: 2;
+    margin-left: auto;
+    gap: 6px;
+  }
+
+  .header-main > .store-search {
+    order: 3;
+    width: 100% !important;
+    height: 44px !important;
+    margin-top: 2px;
+  }
+
+  .store-search input {
+    font-size: 15px;
+    padding-left: 8px;
+  }
+
+  .store-search button {
+    padding: 0 16px;
+    font-size: 12px;
+  }
+
+  /* Category pills / store navigation scrolling smoothly */
+  .store-nav {
+    min-height: 42px;
+    padding-inline: 14px;
+    gap: 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .store-nav-link {
+    height: 42px;
+    font-size: 11px;
+    padding-inline: 4px;
+  }
+
+  /* Hero button actions full-width on mobile */
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .hero-actions .button-primary,
+  .hero-actions .button-quiet {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  /* Category grid touch targets */
+  .category-tile {
+    min-height: 110px;
+    border-radius: 14px;
+  }
+
+  /* Product card mobile polish */
+  .product-tile {
+    border-radius: 16px;
+  }
+
+  .product-pricing {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .product-add {
+    min-height: 40px;
+    font-size: 12px;
+  }
+
+  /* Product details page mobile actions */
+  .pdp-page {
+    padding-bottom: 24px;
+  }
+
+  .pdp-title {
+    font-size: 1.85rem;
+    line-height: 1.2;
+  }
+
+  /* Cart checkout panel on mobile */
+  .cart-page {
+    padding-bottom: 32px;
+  }
+
+  .checkout-panel {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  /* Admin tables horizontal scroll wrapper */
+  .admin-table {
+    min-width: 600px;
+  }
+
+  .admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    border: 1px solid var(--c-border);
+  }
+}

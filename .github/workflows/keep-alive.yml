@@ -1,0 +1,25 @@
+name: FarmFusion 24/7 Keep-Alive Heartbeat
+
+on:
+  schedule:
+    # Run every 5 minutes (standard cron expression)
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  ping-keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping FarmFusion Live Application
+        run: |
+          echo "Sending keep-alive ping to FarmFusion live endpoint..."
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 "https://farmfusion-api.onrender.com/api/health")
+          echo "Response HTTP Status: $RESPONSE"
+          if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 301 ] || [ "$RESPONSE" -eq 302 ]; then
+            echo "✓ FarmFusion is 100% LIVE and awake. Render inactivity timer reset."
+          else
+            echo "⚠ Unexpected status $RESPONSE received, checking again..."
+            sleep 5
+            curl -s --max-time 30 "https://farmfusion-api.onrender.com/api/health" || true
+          fi

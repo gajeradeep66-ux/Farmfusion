@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import MobileNav from './components/MobileNav';
 import Footer from './components/Footer';
 import Toast from './components/Toast';
 import HomePage from './pages/HomePage';
@@ -73,6 +74,7 @@ function App() {
           </Routes>
         </main>
         <Footer />
+        <MobileNav />
         <Toast />
       </div>
     </WishlistProvider>

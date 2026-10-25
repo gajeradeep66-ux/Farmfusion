@@ -14,12 +14,15 @@ import couponRoutes from './routes/couponRoutes.js';
 import Product from './models/Product.js';
 import User from './models/User.js';
 import { createProductImage, seedProducts } from './seedData.js';
+import { startKeepAlive, getKeepAliveStats } from './services/keepAlive.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config();
 
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT || 7854);
 const uploadsPath = path.resolve(__dirname, '../uploads');
 
@@ -81,11 +84,13 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsPath));
 
-app.get(['/api/health', '/healthz'], (req, res) => {
+app.get(['/api/health', '/healthz', '/api/ping'], (req, res) => {
   res.status(200).json({
     status: 'ok',
-    message: 'FarmFusion API is running',
+    message: 'FarmFusion API is live and active',
+    uptime: `${Math.floor(process.uptime())}s`,
     timestamp: new Date().toISOString(),
+    keepAlive: getKeepAliveStats(),
   });
 });
 
@@ -184,6 +189,7 @@ const startServer = async () => {
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`FarmFusion server running on http://localhost:${PORT}`);
+      startKeepAlive();
     });
   } catch (error) {
     console.error('Failed to start server:', error.message);

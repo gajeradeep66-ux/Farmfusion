@@ -15,10 +15,16 @@ const getApiBaseUrl = () => {
     return /\/api$/i.test(clean) ? clean : `${clean}/api`;
   }
 
-  // Fallback: in browser, if hosted on *.onrender.com and VITE_API_URL is missing,
-  // automatically target the sibling backend web service on Render
-  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.onrender.com')) {
-    return 'https://farmfusion-api.onrender.com/api';
+  // If running in browser on farmfusion-api.onrender.com or localhost, use same-origin relative /api
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname.toLowerCase();
+    if (host === 'farmfusion-api.onrender.com' || host === 'localhost' || host === '127.0.0.1') {
+      return '/api';
+    }
+    // If hosted on a custom or separate frontend on Render, target backend
+    if (host.endsWith('.onrender.com')) {
+      return 'https://farmfusion-api.onrender.com/api';
+    }
   }
 
   return '/api';
@@ -28,7 +34,17 @@ const apiBaseUrl = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: apiBaseUrl,
+  timeout: 15000, // 15-second timeout prevents indefinite hanging
 });
+
+// In-browser keep-alive ping: keeps backend warm every 4.5 minutes while user has page open
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      api.get('/health').catch(() => {});
+    }
+  }, 4.5 * 60 * 1000);
+}
 
 export const resolveImageUrl = (image) => {
   if (!image) return '';

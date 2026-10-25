@@ -27,6 +27,7 @@ try {
   });
 
   if (fs.existsSync(distDir)) {
+    fs.rmSync(publicDir, { recursive: true, force: true });
     fs.mkdirSync(publicDir, { recursive: true });
     fs.cpSync(distDir, publicDir, { recursive: true });
     console.log('✓ Frontend compiled and copied to backend/public successfully.');
