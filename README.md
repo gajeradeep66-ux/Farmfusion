@@ -1,62 +1,75 @@
-# FarmFusion
+# FarmFusion 🌱
 
-An online store for seeds, farming tools, and plant care products.
+Online agricultural marketplace for seeds, tools, and crop care essentials.
 
-## Project folders
+## 📁 Project Structure
 
-| Folder | Contents |
-|---|---|
-| `frontend/` | React website |
-| `backend/` | API and MongoDB |
+- `frontend/` - React 19 + Vite + Tailwind CSS
+- `backend/` - Node.js + Express + MongoDB REST API
+- `render.yaml` - Blueprint for 1-click Render deployment
 
-## Features
+## 💻 Run Locally
 
-- Browse, search, sort, and filter farm products by category.
-- Manage a shopping cart and wishlist; place orders with Cash on Delivery or Razorpay.
-- Register and sign in securely; view your order history and delivery details.
-- Admin dashboard for products, inventory, customers, orders, and store information.
-- Upload product and store images or use image URLs.
-- English, Gujarati, and Hindi language options, plus light and dark themes.
+### 1. Install Dependencies
+```bash
+npm install --prefix backend
+npm install --prefix frontend
+```
 
-## Run locally
+### 2. Configure Environment
+Copy `backend/.env.example` to `backend/.env`:
+```bash
+Copy-Item backend\.env.example backend\.env   # Windows
+cp backend/.env.example backend/.env          # Linux/Mac
+```
+Set values in `backend/.env`:
+- `MONGO_URI` = MongoDB Atlas or local connection URL
+- `JWT_SECRET` = Your secret key for auth tokens
+- `ADMIN_PASSWORD` = Password for default admin
+- `FRONTEND_URL` = `http://localhost:5173`
 
-Requirements: Node.js **22.12–24** and a running MongoDB instance.
+### 3. Start Development
+Run backend (Terminal 1):
+```bash
+npm run dev --prefix backend
+```
+Run frontend (Terminal 2):
+```bash
+npm run dev --prefix frontend
+```
+- Website: `http://localhost:5173`
+- API Health: `http://localhost:7854/api/health`
 
-1. Install dependencies for both folders:
+## 🚀 Deploy to Render
 
-   ```powershell
-   npm ci --prefix backend
-   npm ci --prefix frontend
-   ```
+### Step 1: MongoDB Network Access
+In [MongoDB Atlas](https://cloud.mongodb.com/) > **Network Access** > **IP Access List**:
+- Add IP: `0.0.0.0/0` (Allow Access from Anywhere).
 
-2. Create the backend `.env` file:
+### Step 2: Push to GitHub
+```bash
+git add .
+git commit -m "Deploy FarmFusion to Render"
+git push origin main
+```
 
-   ```powershell
-   Copy-Item backend\.env.example backend\.env
-   ```
+### Step 3: Launch Blueprint on Render
+1. Go to [Render Dashboard](https://dashboard.render.com/) > **New +** > **Blueprint**.
+2. Connect your GitHub repository (`Farmfusion`).
+3. Render automatically provisions:
+   - **`farmfusion-api`** (Backend Web Service)
+   - **`farmfusion-web`** (Frontend Static Site)
+4. Fill in the prompted variables:
+   - `MONGO_URI`: Your MongoDB connection string
+   - `ADMIN_PASSWORD`: Your admin password
+5. Click **Apply**.
 
-   Set `MONGO_URI`, `JWT_SECRET`, and `ADMIN_PASSWORD` in `backend\.env`.
+## 🔑 Access & Admin Login
 
-3. Open two terminals and run one command in each:
+- **Website**: `https://farmfusion-web.onrender.com`
+- **API Status**: `https://farmfusion-api.onrender.com/api/health`
+- **Admin Email**: `admin@farmfusion.com`
+- **Admin Password**: Your configured `ADMIN_PASSWORD`
+- **Admin Dashboard**: Sign in at `/login`, then visit `/admin`
 
-   ```powershell
-   npm run dev --prefix backend
-   ```
-
-   ```powershell
-   npm run dev --prefix frontend
-   ```
-
-Website: `http://localhost:5173` · API health check: `http://localhost:7854/api/health`
-
-## Deploy to Render
-
-1. Push this repository to GitHub and create a **New Blueprint** in Render.
-2. Render uses `render.yaml` to create the `farmfusion-api` and `farmfusion-web` services.
-3. Set `MONGO_URI` and `ADMIN_PASSWORD` for the API service. Render generates `JWT_SECRET`.
-4. After deployment, open the website: `https://farmfusion-web.onrender.com`
-5. Check the API at `https://farmfusion-api.onrender.com/api/health`. It should return `"status":"ok"`.
-
-To enable online payments, add the Razorpay `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` to the Render **API service** environment. Never put these values in the frontend.
-
-> On Render's free service, uploaded images may be lost after a restart or redeploy.
+> **Note**: Free tier backends sleep after 15 min of inactivity and take ~40s to wake up on the first request.

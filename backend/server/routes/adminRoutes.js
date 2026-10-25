@@ -10,6 +10,15 @@ import User from '../models/User.js';
 import SiteContent from '../models/SiteContent.js';
 import { protect, adminOnly } from '../middleware/authMiddleware.js';
 import { createProductImage, isCategoryPhoto, productCategories } from '../seedData.js';
+import { v2 as cloudinary } from 'cloudinary';
+
+if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 const router = express.Router();
 const orderStatuses = ['Processing', 'Shipped', 'Delivered', 'Cancelled'];
@@ -139,6 +148,18 @@ router.post('/upload', (req, res, next) => {
     await fs.promises.unlink(req.file.path).catch(() => {});
     return next(error);
   }
+  try {
+    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'farmfusion/products',
+      });
+      await fs.promises.unlink(req.file.path).catch(() => {});
+      return res.status(201).json({ image: uploadResult.secure_url });
+    }
+  } catch (cloudinaryError) {
+    console.warn('Cloudinary upload failed, falling back to local storage:', cloudinaryError.message);
+  }
+
   res.status(201).json({ image: `/uploads/products/${req.file.filename}` });
 });
 

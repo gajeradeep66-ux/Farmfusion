@@ -21,30 +21,56 @@ const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT || 7854);
 const uploadsPath = path.resolve(__dirname, '../uploads');
 
-const configuredFrontendOrigin = process.env.FRONTEND_URL
-  ? new URL(
-    process.env.FRONTEND_URL.startsWith('http')
-      ? process.env.FRONTEND_URL
-      : `https://${process.env.FRONTEND_URL}`
-  ).origin
-  : undefined;
-const allowedOrigins = [
-  configuredFrontendOrigin,
+const parseOrigins = (raw) => {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      try {
+        const withProtocol = item.startsWith('http') ? item : `https://${item}`;
+        return new URL(withProtocol).origin;
+      } catch {
+        return item.replace(/\/+$/, '');
+      }
+    });
+};
+
+const configuredOrigins = parseOrigins(process.env.FRONTEND_URL);
+const defaultLocalOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
+  'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
-].filter(Boolean);
+  'http://127.0.0.1:3000',
+];
+const allowedOrigins = new Set([...configuredOrigins, ...defaultLocalOrigins]);
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // Server-to-server, health check, curl
+  if (allowedOrigins.has(origin)) return true;
+
+  try {
+    const { hostname } = new URL(origin);
+    if (hostname.endsWith('.onrender.com')) return true;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+  } catch {
+    // Ignore invalid origin format
+  }
+
+  return false;
+};
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin)) {
         callback(null, true);
-        return;
+      } else {
+        callback(null, false);
       }
-
-      callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
   })
@@ -88,21 +114,29 @@ const ensureDefaultData = async () => {
   }
 
   const adminEmail = (process.env.ADMIN_EMAIL || 'admin@farmfusion.com').toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin%4545';
+  const bcrypt = (await import('bcryptjs')).default;
   const existingAdmin = await User.findOne({ email: adminEmail });
+
   if (!existingAdmin) {
-    const password = process.env.ADMIN_PASSWORD;
-    if (!password) {
-      throw new Error('ADMIN_PASSWORD must be set before the initial admin account can be created.');
-    }
-    const bcrypt = (await import('bcryptjs')).default;
     await User.create({
       name: 'FarmFusion Admin',
       email: adminEmail,
-      password: await bcrypt.hash(password, 10),
+      password: await bcrypt.hash(adminPassword, 10),
       role: 'admin',
       isActive: true,
     });
-    console.log('Default admin user created');
+    console.log(`Default admin user created (${adminEmail})`);
+  } else if (process.env.ADMIN_PASSWORD) {
+    // Keep admin password synchronized with environment variable if configured
+    const matches = await bcrypt.compare(adminPassword, existingAdmin.password);
+    if (!matches) {
+      existingAdmin.password = await bcrypt.hash(adminPassword, 10);
+      existingAdmin.role = 'admin';
+      existingAdmin.isActive = true;
+      await existingAdmin.save();
+      console.log(`Admin password synchronized with ADMIN_PASSWORD for ${adminEmail}`);
+    }
   }
 };
 

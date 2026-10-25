@@ -31,10 +31,7 @@ services:
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: farmfusion-api
-          property: host
+        value: https://farmfusion-api.onrender.com
     routes:
       - type: rewrite
         source: /*
