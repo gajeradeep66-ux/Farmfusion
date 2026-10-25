@@ -10,6 +10,7 @@ import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import aboutRoutes from './routes/aboutRoutes.js';
+import couponRoutes from './routes/couponRoutes.js';
 import Product from './models/Product.js';
 import User from './models/User.js';
 import { createProductImage, seedProducts } from './seedData.js';
@@ -93,6 +94,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/about', aboutRoutes);
+app.use('/api/coupons', couponRoutes);
 
 const candidateFrontendPaths = [
   path.resolve(__dirname, '../../frontend/dist'),

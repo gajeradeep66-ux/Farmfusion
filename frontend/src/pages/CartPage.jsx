@@ -128,6 +128,7 @@ export default function CartPage() {
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponMessage, setCouponMessage] = useState('');
+  const [activeCoupons, setActiveCoupons] = useState([]);
 
   /* Simulation Modal State */
   const [simModalOpen, setSimModalOpen] = useState(false);
@@ -146,26 +147,58 @@ export default function CartPage() {
         email: user.email || prev.email,
       }));
     }
+    api.get('/coupons/active')
+      .then(({ data }) => {
+        if (Array.isArray(data)) setActiveCoupons(data);
+      })
+      .catch(() => {});
   }, [user]);
 
   const selectedMethod = PAYMENT_METHODS.find((m) => m.id === paymentMethod) || PAYMENT_METHODS[0];
   const isOnline = selectedMethod.group === 'online';
 
-  /* Coupon application */
-  const handleApplyCoupon = (e) => {
-    e.preventDefault();
+  /* Coupon application via API with local fallback */
+  const handleApplyCoupon = async (e, directCode) => {
+    if (e) e.preventDefault();
     setCouponMessage('');
-    const code = couponInput.trim().toUpperCase();
+    const code = (directCode || couponInput).trim().toUpperCase();
+    if (!code) {
+      setCouponMessage('Please enter a coupon code.');
+      return;
+    }
+
+    try {
+      const { data } = await api.post('/coupons/validate', {
+        code,
+        cartTotal: totalAmount,
+      });
+
+      if (data.valid) {
+        setAppliedCoupon({
+          code: data.coupon.code,
+          percent: data.coupon.discountPercent,
+          label: `${data.coupon.discountPercent}% OFF ${data.coupon.description || 'Special Promo'}`,
+        });
+        setCouponInput(data.coupon.code);
+        setCouponMessage(`✓ Coupon ${data.coupon.code} applied! (${data.coupon.discountPercent}% discount)`);
+        return;
+      }
+    } catch (err) {
+      if (err.response?.data?.message) {
+        setCouponMessage(`⚠ ${err.response.data.message}`);
+        return;
+      }
+    }
+
+    /* Fallback static coupon matching */
     if (code === 'FARM10') {
       setAppliedCoupon({ code: 'FARM10', percent: 10, label: '10% Kisan Special Discount' });
       setCouponMessage('✓ Coupon FARM10 applied! You saved 10% on your order.');
     } else if (code === 'KISAN20') {
       setAppliedCoupon({ code: 'KISAN20', percent: 20, label: '20% Mega Harvest Discount' });
       setCouponMessage('✓ Coupon KISAN20 applied! You saved 20% on your order.');
-    } else if (!code) {
-      setCouponMessage('Please enter a coupon code.');
     } else {
-      setCouponMessage('Invalid coupon. Try FARM10 or KISAN20.');
+      setCouponMessage(`Invalid or expired coupon '${code}'.`);
     }
   };
 
@@ -407,6 +440,36 @@ export default function CartPage() {
               <p style={{ margin: '6px 0 0', fontSize: '12px', color: couponMessage.startsWith('✓') ? '#059669' : '#dc2626', fontWeight: '600' }}>
                 {couponMessage}
               </p>
+            )}
+
+            {/* Active clickable promo chips from Admin */}
+            {activeCoupons.length > 0 && (
+              <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed var(--c-border)' }}>
+                <span style={{ fontSize: '11px', color: 'var(--c-text3)', display: 'block', marginBottom: '6px' }}>
+                  Available live coupons (Click to apply):
+                </span>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {activeCoupons.map((c) => (
+                    <button
+                      key={c.code}
+                      type="button"
+                      onClick={() => handleApplyCoupon(null, c.code)}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid #10b981',
+                        background: '#ecfdf5',
+                        color: '#059669',
+                        fontSize: '11px',
+                        fontWeight: '750',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {c.code} ({c.discountPercent}% OFF)
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
 

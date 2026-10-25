@@ -8,6 +8,7 @@ import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
 import SiteContent from '../models/SiteContent.js';
+import Coupon from '../models/Coupon.js';
 import { protect, adminOnly } from '../middleware/authMiddleware.js';
 import { createProductImage, isCategoryPhoto, productCategories } from '../seedData.js';
 import { v2 as cloudinary } from 'cloudinary';
@@ -294,6 +295,98 @@ router.put('/about', async (req, res) => {
     res.json(content);
   } catch (error) {
     res.status(500).json({ message: 'Could not save About page', error: error.message });
+  }
+});
+
+/* ── Coupon Management for Admin ────────────────────────────── */
+router.get('/coupons', async (req, res) => {
+  try {
+    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    res.json(coupons);
+  } catch (error) {
+    res.status(500).json({ message: 'Could not fetch coupons', error: error.message });
+  }
+});
+
+router.post('/coupons', async (req, res) => {
+  try {
+    const { code, discountPercent, minCartAmount, expiresAt, description } = req.body;
+    if (!code || !discountPercent || !expiresAt) {
+      return res.status(400).json({ message: 'Code, discount percentage, and expiry date are required.' });
+    }
+
+    const trimmedCode = code.trim().toUpperCase();
+    const existing = await Coupon.findOne({ code: trimmedCode });
+    if (existing) {
+      return res.status(409).json({ message: `Coupon '${trimmedCode}' already exists.` });
+    }
+
+    const coupon = await Coupon.create({
+      code: trimmedCode,
+      discountPercent: Number(discountPercent),
+      minCartAmount: Number(minCartAmount || 0),
+      expiresAt: new Date(expiresAt),
+      description: description?.trim() || '',
+      isActive: true,
+    });
+
+    res.status(201).json(coupon);
+  } catch (error) {
+    res.status(500).json({ message: 'Could not create coupon', error: error.message });
+  }
+});
+
+router.post('/coupons/auto', async (req, res) => {
+  try {
+    const prefixes = ['KISAN', 'HARVEST', 'FARM', 'AGRI', 'SOIL', 'DHARTI', 'SEEDS', 'GROW'];
+    const discounts = [10, 15, 20, 25, 30];
+    const daysOptions = [7, 14, 30, 45];
+
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const randomDiscount = discounts[Math.floor(Math.random() * discounts.length)];
+    const randomDays = daysOptions[Math.floor(Math.random() * daysOptions.length)];
+    const randomSuffix = Math.floor(10 + Math.random() * 90);
+
+    const generatedCode = `${randomPrefix}${randomDiscount}_${randomSuffix}`.toUpperCase();
+
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + randomDays);
+
+    const coupon = await Coupon.create({
+      code: generatedCode,
+      discountPercent: randomDiscount,
+      minCartAmount: randomDiscount >= 20 ? 499 : 0,
+      expiresAt: expiryDate,
+      description: `Auto-generated ${randomDiscount}% seasonal grower promo`,
+      isActive: true,
+    });
+
+    res.status(201).json(coupon);
+  } catch (error) {
+    res.status(500).json({ message: 'Could not auto-generate coupon', error: error.message });
+  }
+});
+
+router.patch('/coupons/:id/toggle', async (req, res) => {
+  try {
+    const coupon = await Coupon.findById(req.params.id);
+    if (!coupon) return res.status(404).json({ message: 'Coupon not found' });
+
+    coupon.isActive = !coupon.isActive;
+    await coupon.save();
+    res.json(coupon);
+  } catch (error) {
+    res.status(500).json({ message: 'Could not update coupon', error: error.message });
+  }
+});
+
+router.delete('/coupons/:id', async (req, res) => {
+  try {
+    const coupon = await Coupon.findByIdAndDelete(req.params.id);
+    if (!coupon) return res.status(404).json({ message: 'Coupon not found' });
+    res.json({ message: 'Coupon deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Could not delete coupon', error: error.message });
   }
 });
 

@@ -59,6 +59,9 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [busyUser, setBusyUser] = useState('');
   const [busyOrder, setBusyOrder] = useState('');
+  const [coupons, setCoupons] = useState([]);
+  const [couponForm, setCouponForm] = useState({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '' });
+  const [busyCoupon, setBusyCoupon] = useState('');
   const productFileRef = useRef(null);
   const aboutFileRef = useRef(null);
 
@@ -66,12 +69,13 @@ export default function AdminPage() {
     setLoading(true);
     setError('');
     try {
-      const [summaryResponse, ordersResponse, productsResponse, usersResponse, aboutResponse] = await Promise.all([
+      const [summaryResponse, ordersResponse, productsResponse, usersResponse, aboutResponse, couponsResponse] = await Promise.all([
         api.get('/admin/summary'),
         api.get('/admin/orders'),
         api.get('/admin/products'),
         api.get('/admin/users'),
         api.get('/about'),
+        api.get('/admin/coupons').catch(() => ({ data: [] })),
       ]);
       setSummary(summaryResponse.data);
       setOrders(ordersResponse.data);
@@ -79,6 +83,7 @@ export default function AdminPage() {
       setUsers(usersResponse.data);
       setAbout({ ...emptyAbout, ...aboutResponse.data });
       setAboutImageSource(aboutResponse.data.image?.startsWith('/uploads/') ? 'file' : 'url');
+      setCoupons(couponsResponse?.data || []);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Could not load the admin dashboard. Refresh and try again.');
     } finally {
@@ -217,8 +222,75 @@ export default function AdminPage() {
     }
   };
 
+  const handleCreateCoupon = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setMessage('');
+    setError('');
+    try {
+      const payload = {
+        code: couponForm.code.trim().toUpperCase(),
+        discountPercent: Number(couponForm.discountPercent),
+        minCartAmount: Number(couponForm.minCartAmount || 0),
+        expiresAt: couponForm.expiresAt ? new Date(couponForm.expiresAt).toISOString() : new Date(Date.now() + 14 * 86400000).toISOString(),
+        description: couponForm.description,
+      };
+      const { data } = await api.post('/admin/coupons', payload);
+      setCoupons((prev) => [data, ...prev]);
+      setCouponForm({ code: '', discountPercent: 15, minCartAmount: '', expiresAt: '', description: '' });
+      setMessage(`✓ Coupon ${data.code} (${data.discountPercent}% OFF) created successfully!`);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not create coupon.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAutoCreateCoupon = async () => {
+    setSaving(true);
+    setMessage('');
+    setError('');
+    try {
+      const { data } = await api.post('/admin/coupons/auto');
+      setCoupons((prev) => [data, ...prev]);
+      setMessage(`⚡ Auto-generated coupon ${data.code} (${data.discountPercent}% OFF)!`);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not auto-generate coupon.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleCoupon = async (c) => {
+    setBusyCoupon(c._id);
+    try {
+      const { data } = await api.patch(`/admin/coupons/${c._id}/toggle`);
+      setCoupons((prev) => prev.map((item) => (item._id === c._id ? data : item)));
+      setMessage(`Coupon ${c.code} is now ${data.isActive ? 'active' : 'disabled'}.`);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not update coupon.');
+    } finally {
+      setBusyCoupon('');
+    }
+  };
+
+  const handleDeleteCoupon = async (c) => {
+    if (!window.confirm(`Delete coupon ${c.code}?`)) return;
+    setBusyCoupon(c._id);
+    try {
+      await api.delete(`/admin/coupons/${c._id}`);
+      setCoupons((prev) => prev.filter((item) => item._id !== c._id));
+      setMessage(`Coupon ${c.code} deleted.`);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not delete coupon.');
+    } finally {
+      setBusyCoupon('');
+    }
+  };
+
   const tabs = [
     ['products', 'Products'],
+    ['coupons', `Coupons (${coupons.length})`],
     ['users', `Customers (${users.length})`],
     ['about', 'About page'],
     ['orders', `Orders (${orders.length})`],
@@ -455,6 +527,233 @@ export default function AdminPage() {
                 {!orders.length && <p className="admin-empty-state">No orders yet.</p>}
               </div>
             </section>
+          )}
+
+          {tab === 'coupons' && (
+            <div id="admin-panel-coupons" role="tabpanel" aria-labelledby="admin-tab-coupons" className="admin-products-layout">
+              {/* Form to create coupon */}
+              <form onSubmit={handleCreateCoupon} className="admin-panel admin-product-form">
+                <div className="admin-panel-heading">
+                  <div>
+                    <p className="admin-section-label">CREATE PROMO</p>
+                    <h2>New Discount Coupon</h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAutoCreateCoupon}
+                    disabled={saving}
+                    style={{
+                      background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                      color: '#fff',
+                      border: 0,
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    ⚡ Auto-Generate
+                  </button>
+                </div>
+
+                <label className="admin-label">
+                  Coupon Code
+                  <input
+                    required
+                    maxLength="25"
+                    placeholder="e.g. KISAN25 or HARVEST"
+                    value={couponForm.code}
+                    onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+                    className="admin-field mt-1"
+                    style={{ textTransform: 'uppercase', fontWeight: '750' }}
+                  />
+                </label>
+
+                <div className="admin-field-grid">
+                  <label className="admin-label">
+                    Discount (%)
+                    <input
+                      required
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={couponForm.discountPercent}
+                      onChange={(e) => setCouponForm({ ...couponForm, discountPercent: e.target.value })}
+                      className="admin-field mt-1"
+                    />
+                  </label>
+                  <label className="admin-label">
+                    Min Order Spend (₹)
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Optional (e.g. 499)"
+                      value={couponForm.minCartAmount}
+                      onChange={(e) => setCouponForm({ ...couponForm, minCartAmount: e.target.value })}
+                      className="admin-field mt-1"
+                    />
+                  </label>
+                </div>
+
+                <label className="admin-label">
+                  Expiry Date
+                  <input
+                    required
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    value={couponForm.expiresAt}
+                    onChange={(e) => setCouponForm({ ...couponForm, expiresAt: e.target.value })}
+                    className="admin-field mt-1"
+                  />
+                </label>
+
+                <label className="admin-label">
+                  Description / Offer Note
+                  <input
+                    placeholder="e.g. 15% off for all Rabi season certified seeds"
+                    maxLength="120"
+                    value={couponForm.description}
+                    onChange={(e) => setCouponForm({ ...couponForm, description: e.target.value })}
+                    className="admin-field mt-1"
+                  />
+                </label>
+
+                <div className="admin-form-actions">
+                  <button disabled={saving} type="submit" className="admin-primary-button">
+                    {saving ? 'Creating…' : 'Create Coupon'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Coupons List Panel */}
+              <section className="admin-panel admin-inventory-panel">
+                <div className="admin-panel-heading">
+                  <div>
+                    <p className="admin-section-label">ACTIVE & EXPIRED PROMOS</p>
+                    <h2>Coupons Directory</h2>
+                  </div>
+                  <span className="admin-result-count">{coupons.length} coupons</span>
+                </div>
+
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Code</th>
+                        <th>Discount</th>
+                        <th>Min Spend</th>
+                        <th>Status & Expiry</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {coupons.map((c) => {
+                        const isExpired = new Date(c.expiresAt) <= new Date();
+                        const expFormatted = new Date(c.expiresAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        });
+
+                        return (
+                          <tr key={c._id}>
+                            <td>
+                              <strong style={{ fontFamily: 'monospace', fontSize: '13px', background: 'var(--c-surface2)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--c-border)' }}>
+                                {c.code}
+                              </strong>
+                              {c.description && <span style={{ display: 'block', fontSize: '11px', color: 'var(--c-text3)', marginTop: '2px' }}>{c.description}</span>}
+                            </td>
+                            <td>
+                              <span style={{ fontWeight: '800', color: '#059669', background: '#ecfdf5', padding: '3px 8px', borderRadius: '6px', fontSize: '12px' }}>
+                                {c.discountPercent}% OFF
+                              </span>
+                            </td>
+                            <td>{c.minCartAmount > 0 ? `₹${c.minCartAmount}` : 'None'}</td>
+                            <td>
+                              {isExpired ? (
+                                <span style={{ background: '#fef2f2', color: '#b91c1c', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '750' }}>
+                                  Expired ({expFormatted})
+                                </span>
+                              ) : !c.isActive ? (
+                                <span style={{ background: '#f3f4f6', color: '#6b7280', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+                                  Disabled
+                                </span>
+                              ) : (
+                                <span style={{ background: '#ecfdf5', color: '#047857', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+                                  Active (till {expFormatted})
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleCoupon(c)}
+                                  disabled={busyCoupon === c._id}
+                                  style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '5px',
+                                    border: '1px solid var(--c-border)',
+                                    background: 'var(--c-surface)',
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  {c.isActive ? 'Disable' : 'Enable'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteCoupon(c)}
+                                  disabled={busyCoupon === c._id}
+                                  style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '5px',
+                                    border: '1px solid #fee2e2',
+                                    background: '#fef2f2',
+                                    color: '#b91c1c',
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {!coupons.length && (
+                    <div style={{ padding: '30px', textAlign: 'center', color: 'var(--c-text3)' }}>
+                      <p style={{ margin: '0 0 10px' }}>No coupons created yet.</p>
+                      <button
+                        type="button"
+                        onClick={handleAutoCreateCoupon}
+                        style={{
+                          background: 'var(--c-green)',
+                          color: '#fff',
+                          border: 0,
+                          padding: '6px 14px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ⚡ Generate First Kisan Coupon
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
           )}
         </>
       )}
