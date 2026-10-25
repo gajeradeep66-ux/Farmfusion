@@ -61,14 +61,36 @@ router.use(protect, adminOnly);
 
 router.get('/summary', async (req, res) => {
   try {
+    // Keep COD delivered orders synced to paymentStatus: 'paid'
+    await Order.updateMany(
+      { paymentMethod: 'cod', status: 'Delivered', paymentStatus: { $ne: 'paid' } },
+      { $set: { paymentStatus: 'paid' } }
+    );
+
     const [products, orders, users] = await Promise.all([
       Product.countDocuments(),
       Order.countDocuments(),
       User.countDocuments(),
     ]);
 
+    // Paid revenue:
+    // 1. Online orders where user paid online (paymentStatus: 'paid', status !== 'Cancelled')
+    // 2. Cash on Delivery orders after they are delivered (status: 'Delivered')
     const revenue = await Order.aggregate([
-      { $match: { paymentStatus: 'paid' } },
+      {
+        $match: {
+          $and: [
+            { status: { $nin: ['Payment failed', 'Cancelled'] } },
+            {
+              $or: [
+                { paymentMethod: { $ne: 'cod' }, paymentStatus: 'paid' },
+                { paymentMethod: 'cod', status: 'Delivered' },
+                { paymentStatus: 'paid' },
+              ],
+            },
+          ],
+        },
+      },
       { $group: { _id: null, total: { $sum: '$total' } } },
     ]);
 
@@ -76,7 +98,7 @@ router.get('/summary', async (req, res) => {
       products,
       orders,
       users,
-      revenue: revenue[0]?.total || 0,
+      revenue: Math.round((revenue[0]?.total || 0) * 100) / 100,
     });
   } catch (error) {
     res.status(500).json({ message: 'Summary unavailable', error: error.message });
@@ -85,6 +107,11 @@ router.get('/summary', async (req, res) => {
 
 router.get('/orders', async (req, res) => {
   try {
+    // Ensure delivered COD orders have paymentStatus marked as paid
+    await Order.updateMany(
+      { paymentMethod: 'cod', status: 'Delivered', paymentStatus: { $ne: 'paid' } },
+      { $set: { paymentStatus: 'paid' } }
+    );
     const orders = await Order.find({}).sort({ createdAt: -1 }).populate('user', 'name email').lean();
     res.json(orders);
   } catch (error) {
@@ -103,13 +130,51 @@ router.patch('/orders/:id/status', async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
-    if (order.status === 'Payment failed' || (order.paymentMethod === 'razorpay' && order.paymentStatus !== 'paid')) {
+    if (order.status === 'Payment failed') {
       return res.status(409).json({ message: 'Only confirmed orders can be updated' });
     }
 
     order.status = status;
+
+    // For COD orders:
+    // Once delivered, cash has been collected -> paymentStatus becomes 'paid'
+    // If reverted to processing/shipped -> paymentStatus is 'pending'
+    // If cancelled -> paymentStatus is 'failed'
+    if (order.paymentMethod === 'cod') {
+      if (status === 'Delivered') {
+        order.paymentStatus = 'paid';
+      } else if (status === 'Cancelled') {
+        order.paymentStatus = 'failed';
+      } else {
+        order.paymentStatus = 'pending';
+      }
+    }
+
     await order.save();
-    res.json(order);
+
+    // Calculate fresh revenue to return directly to the caller
+    const revenueAgg = await Order.aggregate([
+      {
+        $match: {
+          $and: [
+            { status: { $nin: ['Payment failed', 'Cancelled'] } },
+            {
+              $or: [
+                { paymentMethod: { $ne: 'cod' }, paymentStatus: 'paid' },
+                { paymentMethod: 'cod', status: 'Delivered' },
+                { paymentStatus: 'paid' },
+              ],
+            },
+          ],
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$total' } } },
+    ]);
+
+    const result = order.toObject();
+    result.newRevenue = Math.round((revenueAgg[0]?.total || 0) * 100) / 100;
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: 'Could not update order status', error: error.message });
   }

@@ -259,9 +259,12 @@ export default function CartPage() {
 
       setTimeout(async () => {
         try {
-          await api.post('/orders/cod', {
+          await api.post('/orders', {
             items: getOrderItems(),
             shippingAddress: shipping,
+            paymentMethod: selectedMethod.id || 'online',
+            isOnline: true,
+            transactionId: txnId,
           });
           clearCart();
           setSimModalOpen(false);
@@ -287,9 +290,11 @@ export default function CartPage() {
 
     /* Cash on Delivery */
     try {
-      await api.post('/orders/cod', {
+      await api.post('/orders', {
         items: getOrderItems(),
         shippingAddress: shipping,
+        paymentMethod: 'cod',
+        isOnline: false,
       });
       clearCart();
       setIsSuccess(true);

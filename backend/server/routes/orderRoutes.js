@@ -205,20 +205,36 @@ router.post('/payment/fail', protect, async (req, res) => {
   }
 });
 
-const createCodOrder = async (req, res) => {
+const createOrder = async (req, res) => {
   try {
     if (!validateShippingAddress(req.body.shippingAddress)) {
       return res.status(400).json({ message: 'Please complete all delivery details' });
     }
     const orderItems = await buildOrderItems(req.body.items);
+
+    // Check if customer chose an online payment (UPI, Card, Netbanking, Wallet, etc.)
+    const isOnline = Boolean(
+      req.body.isOnline ||
+      req.body.paymentMethod === 'online' ||
+      ['upi', 'card', 'netbanking', 'wallet', 'online', 'razorpay'].includes(req.body.paymentMethod)
+    );
+
+    const paymentMethod = isOnline
+      ? (req.body.paymentMethod || 'online')
+      : 'cod';
+
+    // Online payments are paid immediately upon checkout! COD remains pending until delivered.
+    const paymentStatus = isOnline ? 'paid' : 'pending';
+
     const order = await Order.create({
       user: req.user._id,
       items: orderItems,
       total: getTotal(orderItems),
       shippingAddress: req.body.shippingAddress,
       status: 'Processing',
-      paymentMethod: 'cod',
-      paymentStatus: 'pending',
+      paymentMethod,
+      paymentStatus,
+      transactionId: req.body.transactionId || (isOnline ? `FF_${Date.now()}` : undefined),
     });
 
     res.status(201).json(order);
@@ -229,8 +245,9 @@ const createCodOrder = async (req, res) => {
   }
 };
 
-router.post('/', protect, createCodOrder);
-router.post('/cod', protect, createCodOrder);
+router.post('/', protect, createOrder);
+router.post('/cod', protect, createOrder);
+router.post('/online', protect, createOrder);
 
 router.get('/my', protect, async (req, res) => {
   try {

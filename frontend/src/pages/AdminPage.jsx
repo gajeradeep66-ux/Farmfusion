@@ -195,7 +195,13 @@ export default function AdminPage() {
     setMessage('');
     try {
       const { data } = await api.patch(`/admin/orders/${order._id}/status`, { status });
-      setOrders((current) => current.map((entry) => entry._id === data._id ? { ...entry, status: data.status } : entry));
+      setOrders((current) => current.map((entry) => entry._id === data._id ? { ...entry, status: data.status, paymentStatus: data.paymentStatus } : entry));
+      if (typeof data.newRevenue === 'number') {
+        setSummary((prev) => ({ ...prev, revenue: data.newRevenue }));
+      } else {
+        const summaryRes = await api.get('/admin/summary');
+        setSummary(summaryRes.data);
+      }
       setMessage(`Order status changed to ${data.status}.`);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Unable to update order status.');
@@ -612,8 +618,34 @@ export default function AdminPage() {
                         <td><strong>{order.user?.name || address.name || 'Customer'}</strong><span>{order.user?.email || address.email || ''}</span></td>
                         <td className="admin-order-items">{order.items?.map((item, index) => <span key={`${order._id}-${item.product || index}`}>{item.name} × {item.quantity}</span>)}</td>
                         <td className="admin-order-address"><strong>{address.name}</strong><span>{[address.address, address.city, address.postalCode, address.country].filter(Boolean).join(', ') || 'Address not available'}</span><span>{address.email}</span></td>
-                        <td>₹{Number(order.total || 0).toLocaleString('en-IN')}</td>
-                        <td>{order.paymentStatus || order.paymentMethod}</td>
+                        <td>
+                          {(() => {
+                            const isCod = order.paymentMethod === 'cod';
+                            const isPaid = order.paymentStatus === 'paid' || (isCod && order.status === 'Delivered');
+                            if (isPaid) {
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(16, 185, 129, 0.14)', color: '#059669', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', width: 'fit-content' }}>
+                                    ✓ {isCod ? 'Cash Collected' : 'Online Paid'}
+                                  </span>
+                                  <small style={{ fontSize: '10px', color: 'var(--c-text3)' }}>
+                                    {isCod ? 'Delivered & Paid' : (order.transactionId ? `Txn: ${order.transactionId}` : (order.paymentMethod || 'Online'))}
+                                  </small>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.14)', color: '#d97706', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', width: 'fit-content' }}>
+                                  ⏳ {isCod ? 'Cash (Pending)' : 'Payment Pending'}
+                                </span>
+                                <small style={{ fontSize: '10px', color: 'var(--c-text3)' }}>
+                                  {isCod ? 'Pay on Delivery' : (order.paymentMethod || 'Online')}
+                                </small>
+                              </div>
+                            );
+                          })()}
+                        </td>
                         <td>
                           <select
                             className="admin-order-status-select"
