@@ -2,7 +2,28 @@ import mongoose from 'mongoose';
 
 const fallbackUri = 'mongodb://127.0.0.1:27017/farmfusion';
 
+let isListeningEvents = false;
+
+const setupConnectionListeners = () => {
+  if (isListeningEvents) return;
+  isListeningEvents = true;
+
+  mongoose.connection.on('disconnected', () => {
+    console.warn('⚠️ MongoDB disconnected. Mongoose will attempt to reconnect...');
+  });
+
+  mongoose.connection.on('reconnected', () => {
+    console.log('✓ MongoDB reconnected successfully.');
+  });
+
+  mongoose.connection.on('error', (err) => {
+    console.warn('⚠️ MongoDB connection error:', err.message);
+  });
+};
+
 const connectDB = async () => {
+  setupConnectionListeners();
+
   const candidateUris = process.env.MONGO_URI
     ? [process.env.MONGO_URI]
     : process.env.NODE_ENV === 'production'
@@ -15,7 +36,10 @@ const connectDB = async () => {
 
   for (const uri of candidateUris) {
     try {
-      const conn = await mongoose.connect(uri);
+      const conn = await mongoose.connect(uri, {
+        serverSelectionTimeoutMS: 8000,
+        socketTimeoutMS: 45000,
+      });
       console.log(`MongoDB connected: ${conn.connection.host}`);
       return conn;
     } catch (error) {

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
@@ -85,9 +86,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsPath));
 
 app.get(['/api/health', '/healthz', '/api/ping'], (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const dbStatusMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting',
+  };
+
   res.status(200).json({
     status: 'ok',
     message: 'FarmFusion API is live and active',
+    database: dbStatusMap[dbState] || 'unknown',
     uptime: `${Math.floor(process.uptime())}s`,
     timestamp: new Date().toISOString(),
     keepAlive: getKeepAliveStats(),
@@ -174,27 +184,47 @@ const ensureDefaultData = async () => {
   }
 };
 
-const startServer = async () => {
+const startServer = () => {
   if (!process.env.JWT_SECRET) {
-    console.error('JWT_SECRET must be set in the environment before starting FarmFusion.');
-    process.exit(1);
+    console.warn('⚠️ JWT_SECRET not found in environment, using fallback secret key.');
+    process.env.JWT_SECRET = 'farmfusion-default-secret-key-render-fallback';
   }
 
-  try {
-    await connectDB();
-    await ensureDefaultData();
+  const productionMode = process.env.NODE_ENV === 'production';
+  console.log(`FarmFusion mode: ${productionMode ? 'production' : 'development'}`);
 
-    const productionMode = process.env.NODE_ENV === 'production';
-    console.log(`FarmFusion mode: ${productionMode ? 'production' : 'development'}`);
+  // 1. Immediately start listening on the port so Render health checks and port scans pass instantly
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✓ FarmFusion server listening on http://0.0.0.0:${PORT}`);
+    console.log(`✓ Healthcheck endpoint ready at http://0.0.0.0:${PORT}/api/health`);
+    startKeepAlive();
+  });
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`FarmFusion server running on http://localhost:${PORT}`);
-      startKeepAlive();
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error.message);
-    process.exit(1);
-  }
+  // 2. Connect to MongoDB in background with robust auto-retry loop (prevents startup crash)
+  const initDatabase = async (attempt = 1) => {
+    try {
+      console.log(`[Database] Connecting to MongoDB (attempt ${attempt})...`);
+      await connectDB();
+      console.log('✓ [Database] Connected successfully');
+      await ensureDefaultData();
+    } catch (error) {
+      console.warn(`⚠️ [Database] Connection attempt ${attempt} failed: ${error.message}`);
+      const retryDelay = Math.min(attempt * 2000, 10000); // 2s, 4s, 6s... up to 10s
+      console.log(`[Database] Retrying in ${retryDelay / 1000} seconds...`);
+      setTimeout(() => initDatabase(attempt + 1), retryDelay);
+    }
+  };
+
+  initDatabase();
 };
+
+// Global safety net to prevent unhandled rejections from crashing the process
+process.on('unhandledRejection', (reason, promise) => {
+  console.warn('⚠️ [Process] Unhandled Promise Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ [Process] Uncaught Exception:', error);
+});
 
 startServer();

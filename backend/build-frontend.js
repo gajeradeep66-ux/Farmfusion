@@ -16,14 +16,14 @@ try {
   execSync('npm install --include=dev', {
     cwd: frontendDir,
     stdio: 'inherit',
-    env: { ...process.env, NODE_ENV: 'development' },
+    env: { ...process.env, NODE_ENV: 'development', NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=384' },
   });
 
   console.log(`Compiling Vite frontend...`);
   execSync('npm run build', {
     cwd: frontendDir,
     stdio: 'inherit',
-    env: { ...process.env, NODE_ENV: 'production' },
+    env: { ...process.env, NODE_ENV: 'production', NODE_OPTIONS: process.env.NODE_OPTIONS || '--max-old-space-size=384' },
   });
 
   if (fs.existsSync(distDir)) {
